@@ -24,8 +24,20 @@ type HoveredContour = {
   x: number;
   y: number;
 };
+type Interaction = {
+  interaction_type: string;
+  interaction_id: string;
+  object_id_list: string[];
+  start_time: number;
+  end_time: number | null;
+};
 
 const PALETTE = ["#59d9ff", "#ffcb52", "#a78bfa", "#5ee6a8", "#ff7e9d", "#fb923c", "#67e8f9"];
+const NATURAL_COLLATOR = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
+
+function naturalCompare(left: string, right: string) {
+  return NATURAL_COLLATOR.compare(left, right);
+}
 
 function colorFor(value: string) {
   let hash = 0;
@@ -38,6 +50,30 @@ function formatTime(seconds: number) {
   const minutes = Math.floor(seconds / 60);
   const remainder = seconds - minutes * 60;
   return `${String(minutes).padStart(2, "0")}:${remainder.toFixed(3).padStart(6, "0")}`;
+}
+
+function annotationTime(seconds: number) {
+  return Number(seconds.toFixed(3));
+}
+
+function nextInteractionId(interactions: Interaction[]) {
+  const usedIds = new Set(interactions.map((interaction) => interaction.interaction_id));
+  let index = 0;
+  while (usedIds.has(`i${index}`)) index += 1;
+  return `i${index}`;
+}
+
+function interactionsEqual(left: Interaction, right: Interaction) {
+  return left.interaction_type === right.interaction_type
+    && left.interaction_id === right.interaction_id
+    && left.start_time === right.start_time
+    && left.end_time === right.end_time
+    && left.object_id_list.length === right.object_id_list.length
+    && left.object_id_list.every((id, index) => id === right.object_id_list[index]);
+}
+
+function cloneInteraction(interaction: Interaction): Interaction {
+  return { ...interaction, object_id_list: [...interaction.object_id_list] };
 }
 
 function nearestFrame(frames: Frame[], time: number) {
@@ -78,11 +114,14 @@ export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
+  const interactionTypeInputRef = useRef<HTMLInputElement>(null);
   const videoUrlRef = useRef<string | null>(null);
 
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoName, setVideoName] = useState("No video selected");
+  const [videoPath, setVideoPath] = useState("");
   const [jsonName, setJsonName] = useState("No control file selected");
+  const [contourPath, setContourPath] = useState("");
   const [data, setData] = useState<ControlData | null>(null);
   const [loadState, setLoadState] = useState<"idle" | "reading" | "ready" | "error">("idle");
   const [message, setMessage] = useState("Choose a video and its control JSON to begin.");
@@ -92,8 +131,33 @@ export default function Home() {
   const [videoSize, setVideoSize] = useState({ width: 16, height: 9 });
   const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
   const [hoveredContour, setHoveredContour] = useState<HoveredContour | null>(null);
+  const [interactionType, setInteractionType] = useState("");
+  const [interactionDraft, setInteractionDraft] = useState<Interaction | null>(null);
+  const [interactions, setInteractions] = useState<Interaction[]>([]);
+  const [selectedInteractionId, setSelectedInteractionId] = useState<string | null>(null);
+  const [editingInteractionId, setEditingInteractionId] = useState<string | null>(null);
 
   const currentFrame = useMemo(() => nearestFrame(data?.frames ?? [], currentTime), [data, currentTime]);
+  const selectedInteraction = useMemo(
+    () => interactions.find((interaction) => interaction.interaction_id === selectedInteractionId) ?? null,
+    [interactions, selectedInteractionId],
+  );
+  const displayedInteraction = interactionDraft ?? selectedInteraction;
+  const originalInteraction = useMemo(
+    () => interactions.find((interaction) => interaction.interaction_id === editingInteractionId) ?? null,
+    [editingInteractionId, interactions],
+  );
+  const hasInteractionChanges = Boolean(
+    interactionDraft && (!originalInteraction || !interactionsEqual(interactionDraft, originalInteraction)),
+  );
+  const sortedInteractions = useMemo(
+    () => [...interactions].sort((left, right) => naturalCompare(left.interaction_id, right.interaction_id)),
+    [interactions],
+  );
+  const interactionTypes = useMemo(
+    () => [...new Set(interactions.map((interaction) => interaction.interaction_type))].sort(naturalCompare),
+    [interactions],
+  );
 
   const catalog = useMemo(() => {
     const byTrack = new Map<string, { id: string; label: string; count: number }>();
@@ -107,8 +171,8 @@ export default function Home() {
       }
     }
     return {
-      types: [...types].sort(),
-      tracks: [...byTrack.values()].sort((a, b) => a.label.localeCompare(b.label) || a.id.localeCompare(b.id)),
+      types: [...types].sort(naturalCompare),
+      tracks: [...byTrack.values()].sort((a, b) => naturalCompare(a.label, b.label) || naturalCompare(a.id, b.id)),
     };
   }, [data]);
 
@@ -189,6 +253,16 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (!interactionDraft) return;
+    const objectIds = [...selectedTracks].sort(naturalCompare);
+    const isUnchanged = objectIds.length === interactionDraft.object_id_list.length
+      && objectIds.every((id, index) => id === interactionDraft.object_id_list[index]);
+    if (!isUnchanged) {
+      setInteractionDraft({ ...interactionDraft, object_id_list: objectIds });
+    }
+  }, [interactionDraft, selectedTracks]);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.target as HTMLElement)?.matches("input, button")) return;
       if (event.code === "Space") {
@@ -215,6 +289,7 @@ export default function Home() {
     videoUrlRef.current = url;
     setVideoUrl(url);
     setVideoName(file.name);
+    setVideoPath(file.webkitRelativePath || file.name);
     setMessage("Video loaded. Select the matching control JSON.");
     setCurrentTime(0);
     setDuration(0);
@@ -225,6 +300,7 @@ export default function Home() {
     const file = event.target.files?.[0];
     if (!file) return;
     setJsonName(file.name);
+    setContourPath(file.webkitRelativePath || file.name);
     setLoadState("reading");
     setMessage(`Reading ${file.name}. Large control files may take a moment…`);
 
@@ -294,6 +370,150 @@ export default function Home() {
     if (!video) return;
     video.currentTime = value;
     setCurrentTime(value);
+  }
+
+  function createInteraction() {
+    const type = (interactionDraft?.interaction_type ?? interactionType).trim();
+    if (!type) {
+      setMessage("Enter an interaction type before creating the interaction.");
+      interactionTypeInputRef.current?.focus();
+      return;
+    }
+    const draft: Interaction = {
+      interaction_type: type,
+      interaction_id: nextInteractionId(interactions),
+      object_id_list: [...selectedTracks].sort(naturalCompare),
+      start_time: annotationTime(currentTime),
+      end_time: null,
+    };
+    setInteractionDraft(draft);
+    setEditingInteractionId(null);
+    setSelectedInteractionId(null);
+    setMessage(`Interaction draft created with ${draft.object_id_list.length} selected objects.`);
+  }
+
+  function setInteractionStartTime() {
+    if (!interactionDraft) return;
+    const startTime = annotationTime(currentTime);
+    setInteractionDraft({ ...interactionDraft, start_time: startTime });
+    setMessage(`Interaction start set to ${formatTime(startTime)}.`);
+  }
+
+  function setInteractionEndTime() {
+    if (!interactionDraft) return;
+    const endTime = annotationTime(currentTime);
+    if (endTime < interactionDraft.start_time) {
+      setMessage("The interaction end time cannot be earlier than its start time.");
+      return;
+    }
+    setInteractionDraft({ ...interactionDraft, end_time: endTime });
+    setMessage(`Interaction end set to ${formatTime(endTime)}.`);
+  }
+
+  function saveInteraction() {
+    if (!interactionDraft) return;
+
+    const savedInteraction: Interaction = {
+      ...interactionDraft,
+      interaction_type: interactionDraft.interaction_type.trim(),
+      object_id_list: [...interactionDraft.object_id_list].sort(naturalCompare),
+    };
+    const validationErrors: string[] = [];
+    if (!savedInteraction.interaction_type) validationErrors.push("Interaction type is required.");
+    if (!savedInteraction.interaction_id.trim()) validationErrors.push("Interaction ID is required.");
+    if (!savedInteraction.object_id_list.length) validationErrors.push("Select at least one object.");
+    if (!Number.isFinite(savedInteraction.start_time)) validationErrors.push("Start time is required.");
+    if (savedInteraction.end_time === null || !Number.isFinite(savedInteraction.end_time)) {
+      validationErrors.push("End time is required.");
+    } else if (savedInteraction.end_time < savedInteraction.start_time) {
+      validationErrors.push("End time cannot be earlier than start time.");
+    }
+    if (!data?.frames.length) validationErrors.push("Control JSON is required to validate contour visibility.");
+
+    if (validationErrors.length) {
+      window.alert(`Cannot save this interaction:\n\n${validationErrors.join("\n")}`);
+      setMessage(validationErrors[0]);
+      return;
+    }
+
+    const startFrame = nearestFrame(data!.frames, savedInteraction.start_time)!;
+    const endFrame = nearestFrame(data!.frames, savedInteraction.end_time!)!;
+    const firstFrameIndex = Math.min(startFrame.frame_index, endFrame.frame_index);
+    const lastFrameIndex = Math.max(startFrame.frame_index, endFrame.frame_index);
+    const framesInWindow = data!.frames.filter(
+      (frame) => frame.frame_index >= firstFrameIndex && frame.frame_index <= lastFrameIndex,
+    );
+    const missingCoverage = savedInteraction.object_id_list.map((objectId) => ({
+      objectId,
+      missingFrames: framesInWindow.filter((frame) => {
+        const track = frame.tracks.find((candidate) => candidate.track_id === objectId);
+        return !track || !track.contours_xy.some((contour) => contour.length >= 3);
+      }).length,
+    })).filter((item) => item.missingFrames > 0);
+
+    if (missingCoverage.length) {
+      const preview = missingCoverage.slice(0, 8)
+        .map((item) => `${item.objectId}: missing on ${item.missingFrames} of ${framesInWindow.length} frames`)
+        .join("\n");
+      const remainder = missingCoverage.length > 8 ? `\n…and ${missingCoverage.length - 8} more objects` : "";
+      const shouldSave = window.confirm(
+        `Some selected objects are not visible throughout frames ${firstFrameIndex}–${lastFrameIndex}:\n\n${preview}${remainder}\n\nIs this intended? Choose Cancel to return to editing.`,
+      );
+      if (!shouldSave) {
+        setMessage("Save canceled. The interaction is still open for editing.");
+        return;
+      }
+    }
+
+    setInteractions((current) => editingInteractionId
+      ? current.map((interaction) => interaction.interaction_id === editingInteractionId ? savedInteraction : interaction)
+      : [...current, savedInteraction]);
+    setSelectedInteractionId(savedInteraction.interaction_id);
+    setEditingInteractionId(savedInteraction.interaction_id);
+    setInteractionDraft(cloneInteraction(savedInteraction));
+    setInteractionType("");
+    setMessage(`Saved interaction ${savedInteraction.interaction_type}.`);
+  }
+
+  function discardInteraction() {
+    if (originalInteraction) {
+      setInteractionDraft(cloneInteraction(originalInteraction));
+      setSelectedTracks(new Set(originalInteraction.object_id_list));
+      setMessage("Unsaved interaction changes discarded.");
+      return;
+    }
+    setInteractionDraft(null);
+    setEditingInteractionId(null);
+    setInteractionType("");
+    setMessage("Interaction draft discarded.");
+  }
+
+  function exportInteractions() {
+    const payload = {
+      video: data?.video || videoPath,
+      contour: contourPath,
+      interaction_list: sortedInteractions,
+    };
+    const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const baseName = videoName.replace(/\.[^.]+$/, "") || "interactions";
+    link.href = url;
+    link.download = `${baseName}.interactions.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setMessage(`Exported ${sortedInteractions.length} interactions.`);
+  }
+
+  function selectInteraction(interaction: Interaction) {
+    setInteractionDraft(cloneInteraction(interaction));
+    setEditingInteractionId(interaction.interaction_id);
+    setSelectedInteractionId(interaction.interaction_id);
+    setSelectedTracks(new Set(interaction.object_id_list));
+    seek(interaction.start_time);
+    setMessage(`Jumped to the start of ${interaction.interaction_type}.`);
   }
 
   function toggleType(type: string) {
@@ -455,6 +675,7 @@ export default function Home() {
           <p className="shortcut-hint"><kbd>Space</kbd> play / pause <kbd>←</kbd><kbd>→</kbd> step one frame</p>
         </div>
 
+        <div className="side-column">
         <aside className="inspector">
           <div className="inspector-title"><div><span className="eyebrow">OVERLAY FILTERS</span><h2>Contours</h2></div><span>{selectedTracks.size}/{catalog.tracks.length}</span></div>
 
@@ -490,6 +711,82 @@ export default function Home() {
             <div><strong>Current frame</strong><small>{currentFrame ? `${currentFrame.tracks.length} tracks · ${formatTime(currentFrame.timestamp_seconds)}` : "No annotation data"}</small></div>
           </div>
         </aside>
+
+        <section className="interactions-panel" aria-label="Interactions">
+          <div className="interactions-title">
+            <div><span className="eyebrow">ANNOTATION EVENTS</span><h2>Interactions</h2></div>
+            <div className="interactions-title-actions">
+              <span>{interactions.length}</span>
+              <button onClick={exportInteractions} disabled={!interactions.length}>Export JSON</button>
+            </div>
+          </div>
+
+          <div className="interaction-create">
+            <label htmlFor="interaction-type">Interaction type</label>
+            <div>
+              <input
+                ref={interactionTypeInputRef}
+                id="interaction-type"
+                list="interaction-type-options"
+                value={interactionDraft?.interaction_type ?? interactionType}
+                onChange={(event) => {
+                  if (interactionDraft) {
+                    setInteractionDraft({ ...interactionDraft, interaction_type: event.target.value });
+                  } else {
+                    setInteractionType(event.target.value);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") createInteraction();
+                }}
+                placeholder="e.g. serving_food"
+              />
+              <datalist id="interaction-type-options">
+                {interactionTypes.map((type) => <option key={type} value={type} />)}
+              </datalist>
+              <button className="primary-action" onClick={createInteraction}>Create interaction</button>
+            </div>
+          </div>
+
+          {displayedInteraction ? (
+            <div className="interaction-detail">
+              <div className="detail-heading">
+                <span className={originalInteraction ? "saved-badge" : "draft-badge"}>{originalInteraction ? "Editing" : "Draft"}</span>
+                <strong>{displayedInteraction.interaction_type}</strong>
+              </div>
+              <pre>{JSON.stringify(displayedInteraction, null, 2)}</pre>
+              <div className="interaction-actions">
+                <button onClick={() => seek(displayedInteraction.start_time)}>Jump to start</button>
+                <button onClick={() => displayedInteraction.end_time !== null && seek(displayedInteraction.end_time)} disabled={displayedInteraction.end_time === null}>Jump to end</button>
+                <button onClick={setInteractionStartTime}>Use current time as start</button>
+                <button onClick={setInteractionEndTime}>Use current time as end</button>
+              </div>
+              <div className="interaction-actions">
+                <button className="save-action" onClick={saveInteraction} disabled={!hasInteractionChanges}>Save</button>
+                <button className="danger-action" onClick={discardInteraction}>{originalInteraction ? "Discard changes" : "Discard"}</button>
+              </div>
+            </div>
+          ) : (
+            <div className="interaction-empty">Create an interaction from the currently selected object IDs and video time.</div>
+          )}
+
+          <div className="defined-interactions">
+            <div className="section-heading"><h3>Defined interactions</h3></div>
+            <div className="interaction-list">
+              {sortedInteractions.length ? sortedInteractions.map((interaction) => (
+                <button
+                  key={interaction.interaction_id}
+                  className={selectedInteractionId === interaction.interaction_id ? "selected" : ""}
+                  onClick={() => selectInteraction(interaction)}
+                >
+                  <span><strong>{interaction.interaction_type}</strong><small>{interaction.interaction_id}</small></span>
+                  <em>{formatTime(interaction.start_time)} → {interaction.end_time === null ? "—" : formatTime(interaction.end_time)}</em>
+                </button>
+              )) : <p>No saved interactions yet.</p>}
+            </div>
+          </div>
+        </section>
+        </div>
       </section>
     </main>
   );
