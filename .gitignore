@@ -5,6 +5,9 @@ node_modules/
 dist/
 build/
 out/
+.next/
+.vinext/
+.wrangler/
 *.tsbuildinfo
 
 # Test coverage
@@ -28,6 +31,7 @@ pnpm-debug.log*
 .parcel-cache/
 .turbo/
 .vite/
+.pnpm-store/
 .eslintcache
 
 # Editor and OS files
@@ -37,4 +41,3 @@ pnpm-debug.log*
 !.vscode/settings.json
 .DS_Store
 Thumbs.db
-
