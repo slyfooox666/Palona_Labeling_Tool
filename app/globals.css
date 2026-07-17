@@ -76,6 +76,11 @@ kbd { display: inline-block; min-width: 18px; margin-left: 6px; padding: 2px 4px
 .inspector-title { min-height: 63px; display: flex; align-items: center; justify-content: space-between; padding: 13px 14px; border-bottom: 1px solid var(--line); }
 .inspector-title h2 { margin: 3px 0 0; font-size: 17px; }
 .inspector-title > span { padding: 5px 7px; border-radius: 5px; background: #1e2b31; color: #86979e; font: 9px var(--font-geist-mono), monospace; }
+.inspector-title-actions { display: flex; align-items: center; gap: 6px; }
+.inspector-title-actions > span { min-width: 42px; padding: 5px 7px; border-radius: 5px; background: #1e2b31; color: #86979e; font: 9px var(--font-geist-mono), monospace; text-align: center; }
+.inspector-title-actions button { height: 27px; padding: 0 8px; border: 1px solid #365563; border-radius: 5px; background: #17262d; color: #a9c5cf; font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; }
+.inspector-title-actions button:hover:not(:disabled) { border-color: var(--cyan); color: var(--cyan); }
+.inspector-title-actions button:disabled { cursor: default; opacity: .35; }
 .filter-section { padding: 14px; border-bottom: 1px solid var(--line); }
 .tracks-section { min-height: 0; flex: 1; display: flex; flex-direction: column; }
 .section-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
@@ -124,6 +129,9 @@ kbd { display: inline-block; min-width: 18px; margin-left: 6px; padding: 2px 4px
 .interaction-create .primary-action { background: #183640; color: var(--cyan); }
 .interaction-empty { margin: 12px 14px; padding: 14px; border: 1px dashed #304149; border-radius: 7px; color: #687a82; font-size: 10px; line-height: 1.55; }
 .interaction-detail { padding: 12px 14px 14px; border-bottom: 1px solid var(--line); }
+.interaction-id-field { display: grid; gap: 5px; margin: 0 0 9px; color: #70858e; font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+.interaction-id-field input { height: 32px; padding: 0 9px; border: 1px solid #36505b; border-radius: 6px; outline: none; background: #0b151a; color: #d8edf5; font: 10px var(--font-geist-mono), monospace; }
+.interaction-id-field input:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px #59d9ff1a; }
 .detail-heading { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .detail-heading strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
 .draft-badge, .saved-badge { padding: 4px 6px; border-radius: 4px; font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; }

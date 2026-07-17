@@ -136,6 +136,7 @@ export default function Home() {
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [selectedInteractionId, setSelectedInteractionId] = useState<string | null>(null);
   const [editingInteractionId, setEditingInteractionId] = useState<string | null>(null);
+  const [exportedInteractionSignature, setExportedInteractionSignature] = useState("");
 
   const currentFrame = useMemo(() => nearestFrame(data?.frames ?? [], currentTime), [data, currentTime]);
   const selectedInteraction = useMemo(
@@ -154,6 +155,7 @@ export default function Home() {
     () => [...interactions].sort((left, right) => naturalCompare(left.interaction_id, right.interaction_id)),
     [interactions],
   );
+  const interactionSignature = useMemo(() => JSON.stringify(sortedInteractions), [sortedInteractions]);
   const interactionTypes = useMemo(
     () => [...new Set(interactions.map((interaction) => interaction.interaction_type))].sort(naturalCompare),
     [interactions],
@@ -284,15 +286,41 @@ export default function Home() {
   function loadVideo(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
+    const hasUnexportedInteractions = interactions.length > 0
+      && interactionSignature !== exportedInteractionSignature;
+    if (hasUnexportedInteractions || hasInteractionChanges) {
+      const warning = hasUnexportedInteractions
+        ? "Saved interactions have not been exported. Loading another video will remove the current control JSON and all interactions.\n\nChoose Cancel to export them first."
+        : "The interaction editor has unsaved changes. Loading another video will discard them and remove the current control JSON.\n\nChoose Cancel to return to editing.";
+      if (!window.confirm(warning)) {
+        event.target.value = "";
+        setMessage("Video loading canceled. Your current labeling session is unchanged.");
+        return;
+      }
+    }
+
     if (videoUrlRef.current) URL.revokeObjectURL(videoUrlRef.current);
     const url = URL.createObjectURL(file);
     videoUrlRef.current = url;
     setVideoUrl(url);
     setVideoName(file.name);
     setVideoPath(file.webkitRelativePath || file.name);
+    setData(null);
+    setJsonName("No control file selected");
+    setContourPath("");
+    setLoadState("idle");
+    setSelectedTracks(new Set());
+    setInteractions([]);
+    setInteractionDraft(null);
+    setInteractionType("");
+    setSelectedInteractionId(null);
+    setEditingInteractionId(null);
+    setExportedInteractionSignature("");
+    if (jsonInputRef.current) jsonInputRef.current.value = "";
     setMessage("Video loaded. Select the matching control JSON.");
     setCurrentTime(0);
     setDuration(0);
+    setIsPlaying(false);
     setHoveredContour(null);
   }
 
@@ -416,11 +444,16 @@ export default function Home() {
     const savedInteraction: Interaction = {
       ...interactionDraft,
       interaction_type: interactionDraft.interaction_type.trim(),
+      interaction_id: interactionDraft.interaction_id.trim(),
       object_id_list: [...interactionDraft.object_id_list].sort(naturalCompare),
     };
     const validationErrors: string[] = [];
     if (!savedInteraction.interaction_type) validationErrors.push("Interaction type is required.");
     if (!savedInteraction.interaction_id.trim()) validationErrors.push("Interaction ID is required.");
+    if (interactions.some((interaction) => interaction.interaction_id === savedInteraction.interaction_id
+      && interaction.interaction_id !== editingInteractionId)) {
+      validationErrors.push(`Interaction ID ${savedInteraction.interaction_id} is already in use.`);
+    }
     if (!savedInteraction.object_id_list.length) validationErrors.push("Select at least one object.");
     if (!Number.isFinite(savedInteraction.start_time)) validationErrors.push("Start time is required.");
     if (savedInteraction.end_time === null || !Number.isFinite(savedInteraction.end_time)) {
@@ -504,6 +537,7 @@ export default function Home() {
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
+    setExportedInteractionSignature(interactionSignature);
     setMessage(`Exported ${sortedInteractions.length} interactions.`);
   }
 
@@ -677,7 +711,13 @@ export default function Home() {
 
         <div className="side-column">
         <aside className="inspector">
-          <div className="inspector-title"><div><span className="eyebrow">OVERLAY FILTERS</span><h2>Contours</h2></div><span>{selectedTracks.size}/{catalog.tracks.length}</span></div>
+          <div className="inspector-title">
+            <div><span className="eyebrow">OVERLAY FILTERS</span><h2>Contours</h2></div>
+            <div className="inspector-title-actions">
+              <span>{selectedTracks.size}/{catalog.tracks.length}</span>
+              <button onClick={() => setSelectedTracks(new Set())} disabled={!selectedTracks.size}>Clear selection</button>
+            </div>
+          </div>
 
           <section className="filter-section">
             <div className="section-heading"><h3>Object type</h3><div><button onClick={() => setSelectedTracks(new Set(catalog.tracks.map((track) => track.id)))}>All</button><button onClick={() => setSelectedTracks(new Set())}>None</button></div></div>
@@ -754,6 +794,18 @@ export default function Home() {
                 <span className={originalInteraction ? "saved-badge" : "draft-badge"}>{originalInteraction ? "Editing" : "Draft"}</span>
                 <strong>{displayedInteraction.interaction_type}</strong>
               </div>
+              <label className="interaction-id-field" htmlFor="interaction-id">
+                <span>Interaction ID</span>
+                <input
+                  id="interaction-id"
+                  value={interactionDraft?.interaction_id ?? displayedInteraction.interaction_id}
+                  onChange={(event) => {
+                    if (interactionDraft) {
+                      setInteractionDraft({ ...interactionDraft, interaction_id: event.target.value });
+                    }
+                  }}
+                />
+              </label>
               <pre>{JSON.stringify(displayedInteraction, null, 2)}</pre>
               <div className="interaction-actions">
                 <button onClick={() => seek(displayedInteraction.start_time)}>Jump to start</button>

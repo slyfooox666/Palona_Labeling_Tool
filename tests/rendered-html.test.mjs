@@ -53,6 +53,9 @@ test("includes frame sync, contour hit testing, and local file support", async (
   assert.match(page, /end_time: null/);
   assert.match(page, /nextInteractionId\(interactions\)/);
   assert.match(page, /return `i\$\{index\}`/);
+  assert.match(page, /id="interaction-id"/);
+  assert.match(page, /interaction_id: interactionDraft\.interaction_id\.trim\(\)/);
+  assert.match(page, /Interaction ID \$\{savedInteraction\.interaction_id\} is already in use/);
   assert.match(page, /Use current time as end/);
   assert.match(page, /Use current time as start/);
   assert.match(page, /Jump to start/);
@@ -79,4 +82,10 @@ test("includes frame sync, contour hit testing, and local file support", async (
   assert.match(page, /frame\.frame_index >= firstFrameIndex/);
   assert.match(page, /track\.contours_xy\.some\(\(contour\) => contour\.length >= 3\)/);
   assert.doesNotMatch(page, /onClick=\{createInteraction\} disabled=/);
+  assert.match(page, /Saved interactions have not been exported/);
+  assert.match(page, /setData\(null\)/);
+  assert.match(page, /setInteractions\(\[\]\)/);
+  assert.match(page, /setJsonName\("No control file selected"\)/);
+  assert.match(page, /setExportedInteractionSignature\(interactionSignature\)/);
+  assert.match(page, />Clear selection<\/button>/);
 });
