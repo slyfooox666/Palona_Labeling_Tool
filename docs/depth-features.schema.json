@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palona.local/schemas/depth-features-v1.json",
+  "title": "Palona estimated relative depth features",
+  "type": "object",
+  "required": ["schema_version", "video", "source", "depth_metadata", "frames", "boundary_candidates"],
+  "properties": {
+    "schema_version": { "const": "palona.depth-features/v1" },
+    "video": { "type": "string", "minLength": 1 },
+    "contour": { "type": "string", "minLength": 1 },
+    "source": {
+      "type": "object",
+      "required": ["video_width", "video_height", "video_fps", "video_duration_seconds", "video_frame_count"],
+      "properties": {
+        "video_width": { "type": "integer", "minimum": 1 },
+        "video_height": { "type": "integer", "minimum": 1 },
+        "video_fps": { "type": "number", "exclusiveMinimum": 0 },
+        "video_duration_seconds": { "type": "number", "minimum": 0 },
+        "video_frame_count": { "type": ["integer", "null"], "minimum": 1 },
+        "video_file_size_bytes": { "type": "integer", "minimum": 1 },
+        "contour_file_size_bytes": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "depth_metadata": {
+      "type": "object",
+      "required": [
+        "model",
+        "model_revision",
+        "metric",
+        "metric_units",
+        "raw_depth_direction",
+        "depth_semantics",
+        "inference_mode",
+        "temporal_alignment",
+        "normalization",
+        "sample_fps",
+        "max_alignment_error_seconds",
+        "max_cue_age_seconds",
+        "max_temporal_gap_seconds"
+      ],
+      "properties": {
+        "model": { "type": "string", "minLength": 1 },
+        "model_revision": { "type": "string", "minLength": 1 },
+        "metric": { "const": false },
+        "metric_units": { "type": "null" },
+        "raw_depth_direction": { "const": "larger_is_farther" },
+        "depth_semantics": { "const": "depth_rank: 0=near, 1=far" },
+        "inference_mode": { "const": "independent_depth_image" },
+        "temporal_alignment": {
+          "type": "object",
+          "required": [
+            "method",
+            "anchor_region",
+            "lower_quantile",
+            "center_quantile",
+            "upper_quantile",
+            "canonical_median",
+            "canonical_iqr",
+            "frame_transforms"
+          ],
+          "properties": {
+            "method": { "const": "per_frame_robust_affine_to_clip_anchor" },
+            "anchor_region": { "const": "common_untracked_background_with_full_frame_fallback" },
+            "lower_quantile": { "const": 0.25 },
+            "center_quantile": { "const": 0.5 },
+            "upper_quantile": { "const": 0.75 },
+            "canonical_median": { "type": "number" },
+            "canonical_iqr": { "type": "number", "exclusiveMinimum": 0 },
+            "frame_transforms": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/temporalTransform" }
+            }
+          }
+        },
+        "normalization": {
+          "type": "object",
+          "required": ["method", "low_quantile", "high_quantile", "aligned_low", "aligned_high"],
+          "properties": {
+            "method": { "const": "clip_robust_quantile" },
+            "low_quantile": { "type": "number", "minimum": 0, "maximum": 1 },
+            "high_quantile": { "type": "number", "minimum": 0, "maximum": 1 },
+            "aligned_low": { "type": "number" },
+            "aligned_high": { "type": "number" }
+          }
+        },
+        "sample_fps": { "type": "number", "exclusiveMinimum": 0 },
+        "max_alignment_error_seconds": { "type": "number", "minimum": 0 },
+        "max_cue_age_seconds": { "type": "number", "minimum": 0 },
+        "max_temporal_gap_seconds": { "type": "number", "minimum": 0 }
+      }
+    },
+    "frames": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/frame" }
+    },
+    "boundary_candidates": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/candidate" }
+    }
+  },
+  "$defs": {
+    "temporalTransform": {
+      "type": "object",
+      "required": [
+        "frame_index",
+        "timestamp_seconds",
+        "scale",
+        "shift",
+        "anchor_median_raw",
+        "anchor_iqr_raw",
+        "anchor_pixel_count_sampled",
+        "used_full_frame_fallback",
+        "stability_quality"
+      ],
+      "properties": {
+        "frame_index": { "type": "integer", "minimum": 0 },
+        "timestamp_seconds": { "type": "number", "minimum": 0 },
+        "scale": { "type": "number", "exclusiveMinimum": 0 },
+        "shift": { "type": "number" },
+        "anchor_median_raw": { "type": "number" },
+        "anchor_iqr_raw": { "type": "number", "exclusiveMinimum": 0 },
+        "anchor_pixel_count_sampled": { "type": "integer", "minimum": 16 },
+        "used_full_frame_fallback": { "type": "boolean" },
+        "stability_quality": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "instance": {
+      "type": "object",
+      "required": ["track_id", "depth_rank", "depth_iqr", "valid_depth_ratio", "depth_velocity", "feature_quality"],
+      "properties": {
+        "track_id": { "type": "string", "minLength": 1 },
+        "depth_rank": { "type": "number", "minimum": 0, "maximum": 1 },
+        "depth_iqr": { "type": "number", "minimum": 0 },
+        "valid_depth_ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+        "depth_confidence_median_raw": { "type": "number" },
+        "depth_confidence_percentile": { "type": "number", "minimum": 0, "maximum": 1 },
+        "depth_velocity": { "type": "number" },
+        "feature_quality": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "pair": {
+      "type": "object",
+      "required": [
+        "source_id",
+        "target_id",
+        "depth_gap_abs",
+        "source_depth_rank",
+        "target_local_depth_rank",
+        "mask_gap_2d_norm",
+        "centroid_distance_2d_norm",
+        "target_visible_ratio",
+        "relative_depth_velocity",
+        "proximity_score",
+        "proximity_duration_seconds",
+        "trend",
+        "start_candidate_score",
+        "end_candidate_score",
+        "feature_quality"
+      ],
+      "properties": {
+        "source_id": { "type": "string", "minLength": 1 },
+        "target_id": { "type": "string", "minLength": 1 },
+        "depth_gap_abs": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source_depth_rank": { "type": "number", "minimum": 0, "maximum": 1 },
+        "target_local_depth_rank": { "type": "number", "minimum": 0, "maximum": 1 },
+        "mask_gap_2d_norm": { "type": "number", "minimum": 0 },
+        "centroid_distance_2d_norm": { "type": "number", "minimum": 0 },
+        "target_visible_ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+        "relative_depth_velocity": { "type": "number" },
+        "proximity_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "proximity_duration_seconds": { "type": "number", "minimum": 0 },
+        "trend": { "enum": ["approaching", "stable", "leaving"] },
+        "start_candidate_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "end_candidate_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "feature_quality": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "frame": {
+      "type": "object",
+      "required": ["frame_index", "timestamp_seconds", "instances", "pairs"],
+      "properties": {
+        "frame_index": { "type": "integer", "minimum": 0 },
+        "timestamp_seconds": { "type": "number", "minimum": 0 },
+        "instances": { "type": "array", "items": { "$ref": "#/$defs/instance" } },
+        "pairs": { "type": "array", "items": { "$ref": "#/$defs/pair" } }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "required": ["candidate_id", "source_id", "target_id", "start_time", "end_time", "peak_score", "quality"],
+      "properties": {
+        "candidate_id": { "type": "string", "minLength": 1 },
+        "source_id": { "type": "string", "minLength": 1 },
+        "target_id": { "type": "string", "minLength": 1 },
+        "start_time": { "type": "number", "minimum": 0 },
+        "end_time": { "type": ["number", "null"], "minimum": 0 },
+        "peak_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "quality": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}
