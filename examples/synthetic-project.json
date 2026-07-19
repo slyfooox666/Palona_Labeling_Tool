@@ -1,0 +1,44 @@
+{
+  "schema_version": "palona.annotation-project/v1",
+  "source": {
+    "video_path": "source/synthetic.mp4",
+    "contour_path": "source/synthetic.contours.json",
+    "video_fps": 30,
+    "video_width": 640,
+    "video_height": 360,
+    "frame_count": 300,
+    "duration_seconds": 10,
+    "available_categories": [
+      "person",
+      "table"
+    ]
+  },
+  "interactions": [
+    {
+      "interaction_id": "i0",
+      "interaction_type": "occupy_table",
+      "object_id_list": [
+        "p0:11",
+        "p0:12",
+        "p1:0"
+      ],
+      "start_time": 0,
+      "end_time": 3,
+      "start_frame": 0,
+      "end_frame": 90,
+      "notes": "Synthetic, non-CCTV example"
+    }
+  ],
+  "roi": {
+    "polygon": [
+      [0.1, 0.12],
+      [0.82, 0.1],
+      [0.9, 0.85],
+      [0.08, 0.88]
+    ],
+    "blackout_enabled": true
+  },
+  "id_aliases": {},
+  "created_at": "2026-07-16T01:00:00.000Z",
+  "updated_at": "2026-07-16T01:01:00.000Z"
+}

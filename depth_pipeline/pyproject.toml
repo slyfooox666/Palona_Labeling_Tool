@@ -1,0 +1,34 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "palona-depth-cues"
+version = "0.1.0"
+description = "Offline DA3 relative-depth cue preprocessing for Palona Labeling Tool"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "av==15.0.0",
+  "ijson==3.4.0.post0",
+  "numpy==1.26.4",
+  "opencv-python-headless==4.11.0.86",
+]
+
+[project.optional-dependencies]
+dev = [
+  "jsonschema==4.25.1",
+  "pytest==8.4.1",
+]
+
+[project.scripts]
+palona-depth = "palona_depth.cli:main"
+palona-roi-export = "palona_depth.roi_cli:main"
+palona-control-merge = "palona_depth.control_merge:main"
+palona-video-convert = "palona_depth.video_convert_cli:main"
+palona-full-video = "palona_depth.full_video_cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/palona_depth"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

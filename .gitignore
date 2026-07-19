@@ -33,6 +33,34 @@ pnpm-debug.log*
 .vite/
 .pnpm-store/
 .eslintcache
+depth_pipeline/.venv/
+depth_pipeline/.pytest_cache/
+depth_pipeline/.uv-cache/
+__pycache__/
+*.py[cod]
+
+# Private generated depth cues and model artifacts
+*.control.json
+*.control.json.*.tmp
+*.depth-features.json
+*.depth-features.json.tmp
+*.npy
+depth_outputs/
+
+# Local annotation/project exports (synthetic examples use different names)
+*.palona-project.json
+*.events-minimal.json
+*.filtered-contours.json
+*.filtered-contours.*.json.tmp
+*.interactions.json
+roi_exports/
+
+# Private CCTV / generated video (already-tracked LFS fixtures remain tracked)
+*.mkv
+*.mp4
+*.mov
+*.webm
+*.avi
 
 # Editor and OS files
 .idea/
