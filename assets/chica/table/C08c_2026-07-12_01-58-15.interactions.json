@@ -1,0 +1,282 @@
+{
+  "video": "agent/vision/chica/table/train/C08c_2026-07-12_01-58-15.mkv",
+  "contour": "C08c_2026-07-12_01-58-15.json",
+  "interaction_list": [
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i0",
+      "object_id_list": [
+        "p0:1",
+        "p0:10",
+        "p1:2"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i1",
+      "object_id_list": [
+        "p0:1",
+        "p0:10",
+        "p0:14",
+        "p1:2"
+      ],
+      "start_time": 0,
+      "end_time": 40.767
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i2",
+      "object_id_list": [
+        "p0:2",
+        "p0:18",
+        "p0:22",
+        "p0:32",
+        "p0:39",
+        "p0:49",
+        "p1:3",
+        "p1:5",
+        "p1:21",
+        "p1:25",
+        "p1:28"
+      ],
+      "start_time": 24.1,
+      "end_time": 49.6
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i3",
+      "object_id_list": [
+        "p0:2",
+        "p0:22",
+        "p0:32",
+        "p0:39",
+        "p0:49",
+        "p0:74",
+        "p0:96",
+        "p1:3",
+        "p1:5",
+        "p1:21",
+        "p1:30"
+      ],
+      "start_time": 54.667,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i4",
+      "object_id_list": [
+        "p0:5",
+        "p0:21",
+        "p0:45",
+        "p0:53",
+        "p0:81",
+        "p1:0"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i5",
+      "object_id_list": [
+        "p0:3",
+        "p0:6",
+        "p0:11",
+        "p0:19",
+        "p0:26",
+        "p0:37",
+        "p0:59",
+        "p0:67",
+        "p1:12"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i6",
+      "object_id_list": [
+        "p0:23",
+        "p0:31",
+        "p1:11"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i7",
+      "object_id_list": [
+        "p0:23",
+        "p0:30",
+        "p0:31",
+        "p0:42",
+        "p1:11"
+      ],
+      "start_time": 2.733,
+      "end_time": 11.133
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i8",
+      "object_id_list": [
+        "p0:24",
+        "p0:27",
+        "p0:28",
+        "p0:29",
+        "p0:92",
+        "p1:8",
+        "p1:17"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i9",
+      "object_id_list": [
+        "p0:4",
+        "p0:15",
+        "p0:20",
+        "p1:9"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i10",
+      "object_id_list": [
+        "p0:9",
+        "p0:16",
+        "p0:38",
+        "p0:73"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i11",
+      "object_id_list": [
+        "p0:8",
+        "p0:36",
+        "p0:57",
+        "p0:79"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i12",
+      "object_id_list": [
+        "p0:25",
+        "p0:33",
+        "p0:34",
+        "p0:43",
+        "p0:48",
+        "p0:52",
+        "p0:55",
+        "p0:58",
+        "p0:65",
+        "p0:71",
+        "p0:86",
+        "p0:93",
+        "p0:95",
+        "p1:14",
+        "p1:20",
+        "p1:27",
+        "p1:31"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i13",
+      "object_id_list": [
+        "p0:0",
+        "p0:17",
+        "p1:6",
+        "p1:22"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i14",
+      "object_id_list": [
+        "p0:13",
+        "p1:1",
+        "p1:18",
+        "p1:29"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i15",
+      "object_id_list": [
+        "p0:23",
+        "p0:31",
+        "p0:70",
+        "p1:11"
+      ],
+      "start_time": 43.5,
+      "end_time": 59.5
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i16",
+      "object_id_list": [
+        "p0:14",
+        "p0:24",
+        "p0:27",
+        "p0:28",
+        "p0:29",
+        "p1:17"
+      ],
+      "start_time": 47.6,
+      "end_time": 49.567
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i17",
+      "object_id_list": [
+        "p0:2",
+        "p0:18",
+        "p0:22",
+        "p0:32",
+        "p0:39",
+        "p1:3",
+        "p1:5",
+        "p1:21"
+      ],
+      "start_time": 0,
+      "end_time": 24.067
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i18",
+      "object_id_list": [
+        "p0:2",
+        "p0:22",
+        "p0:32",
+        "p0:39",
+        "p0:49",
+        "p0:87",
+        "p0:96",
+        "p1:3",
+        "p1:28",
+        "p1:30"
+      ],
+      "start_time": 49.667,
+      "end_time": 54.633
+    }
+  ]
+}
