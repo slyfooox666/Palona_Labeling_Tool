@@ -9,3 +9,5 @@ assets/chica/table/C06_2026-07-12_01-01-14.mkv filter=lfs diff=lfs merge=lfs -te
 assets/chica/table/C06_2026-07-12_01-03-14.mkv filter=lfs diff=lfs merge=lfs -text
 assets/chica/table/C08_2026-07-12_01-58-15.mkv filter=lfs diff=lfs merge=lfs -text
 assets/chica/table/C06_2026-07-12_01-01-14.json filter=lfs diff=lfs merge=lfs -text
+assets/chica/table/C08c_2026-07-12_00-58-14.json filter=lfs diff=lfs merge=lfs -text
+assets/chica/table/C08c_2026-07-12_00-58-14.mkv filter=lfs diff=lfs merge=lfs -text
