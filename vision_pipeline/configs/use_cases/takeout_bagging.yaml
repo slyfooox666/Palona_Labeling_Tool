@@ -1,0 +1,53 @@
+config_version: 1
+use_case_id: takeout_bagging_v1
+purpose: Track item packaging events as food items are placed into a takeout bag.
+
+input:
+  camera_config: ../cameras/store_001_takeout_station.yaml
+  fps: 5
+
+models:
+  detector:
+    config: ../models/rf_detr.yaml
+    classes:
+      - takeout_bag
+      - burger_wrapper
+      - fries_carton
+      - nuggets_box
+      - drink_cup
+      - sauce_packet
+    confidence_threshold: 0.45
+  tracker:
+    config: ../models/bytetrack.yaml
+    max_lost_seconds: 5
+  vlm:
+    enabled: true
+    config: ../models/qwen3_vl.yaml
+    prompt: ../prompts/classify_takeout_item.yaml
+
+regions:
+  include:
+    - packing_zone
+  event_zones:
+    - bag_opening_zone
+
+frame_selection:
+  max_frames: 8
+  include_tight_crop: true
+  include_context_crop: true
+  event_frames:
+    - picked_up
+    - approaching_bag
+    - crossing_bag_opening
+    - after_occlusion
+
+event_logic:
+  event: item_entered_bag
+  crossing_zone: bag_opening_zone
+  missing_after_crossing_seconds: 2
+
+outputs:
+  events:
+    - item_candidate_detected
+    - item_entered_bag
+    - item_classified

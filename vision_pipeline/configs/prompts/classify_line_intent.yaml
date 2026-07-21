@@ -1,0 +1,33 @@
+prompt_id: classify_line_intent_v1
+task: Classify whether a tracked person is relevant to line velocity metrics.
+
+system: |
+  You are a visual classifier for restaurant queue analytics.
+  Return only valid JSON.
+
+user_template: |
+  Review the provided tight and context crops for person track_id={track_id}.
+  Classify the person's role and intent across the clip.
+  Use surrounding people, the counter, employee interaction, and motion context when available.
+
+  Allowed roles:
+  - waiting_customer
+  - being_served_customer
+  - passerby
+  - employee
+  - seated_customer
+  - unknown
+
+  Return JSON with:
+  - role: one allowed role
+  - include_in_line_velocity: boolean
+  - confidence: number from 0 to 1
+  - key_evidence: short string
+
+response_schema:
+  type: object
+  required:
+    - role
+    - include_in_line_velocity
+    - confidence
+    - key_evidence

@@ -34,12 +34,22 @@ test("server-renders the contour labeling workspace", async () => {
 test("includes frame sync, contour hit testing, and local file support", async () => {
   const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
   assert.match(page, /requestVideoFrameCallback/);
+  assert.match(page, /metadata\?\.mediaTime \?\? video\.currentTime/);
+  assert.match(page, /function frameAtOrBefore/);
   assert.match(page, /function pointInPolygon/);
   assert.match(page, /stepFrame\(-1\)/);
   assert.match(page, /stepFrame\(1\)/);
   assert.match(page, /accept="video\/\*,\.mkv"/);
   assert.match(page, /new Worker/);
+  assert.match(page, /file\.stream\(\)\.getReader\(\)/);
+  assert.match(page, /type: "batch"/);
+  assert.match(page, /loadedFrames\.push/);
+  assert.doesNotMatch(page, /JSON\.parse\(await file\.text\(\)\)/);
   assert.match(page, /track\.contours_xy/);
+  assert.match(page, /bbox_xyxy: track\.bbox_xyxy/);
+  assert.match(page, /!drewPolygon && track\.bbox_xyxy/);
+  assert.match(page, /context\.setLineDash/);
+  assert.match(page, /!hasPolygon && track\.bbox_xyxy/);
   assert.match(page, /for \(const track of currentFrame\?\.tracks \?\? \[\]\)/);
   assert.match(page, /track\.track_id === hoveredContour\?\.id/);
   assert.match(page, /\{hoveredContour\.id\} \{hoveredContour\.label\}/);
@@ -49,7 +59,7 @@ test("includes frame sync, contour hit testing, and local file support", async (
   assert.match(page, /interaction_type: type/);
   assert.match(page, /interactionDraft\?\.interaction_type \?\? interactionType/);
   assert.match(page, /object_id_list: \[\.\.\.selectedTracks\]\.sort\(naturalCompare\)/);
-  assert.match(page, /start_time: annotationTime\(currentTime\)/);
+  assert.match(page, /start_time: annotationTime\(currentAnnotationTime\)/);
   assert.match(page, /end_time: null/);
   assert.match(page, /nextInteractionId\(interactions\)/);
   assert.match(page, /return `i\$\{index\}`/);
@@ -88,4 +98,16 @@ test("includes frame sync, contour hit testing, and local file support", async (
   assert.match(page, /setJsonName\("No control file selected"\)/);
   assert.match(page, /setExportedInteractionSignature\(interactionSignature\)/);
   assert.match(page, />Clear selection<\/button>/);
+  assert.match(page, /seekToFrame\(targetIndex\)/);
+  assert.match(page, /function seekToFrame/);
+  assert.match(page, /function startFrameStepping/);
+  assert.match(page, /function stopFrameStepping/);
+  assert.match(page, /STEP_HOLD_DELAY_MS/);
+  assert.match(page, /STEP_REPEAT_MS/);
+  assert.match(page, /onPointerCancel=\{stopFrameStepping\}/);
+  assert.match(page, /onLostPointerCapture=\{stopFrameStepping\}/);
+  assert.match(page, /followingFrame\.timestamp_seconds - targetFrame\.timestamp_seconds/);
+  assert.match(page, /setCurrentTime\(targetFrame\.timestamp_seconds\)/);
+  assert.doesNotMatch(page, /video\.currentTime \+ direction \/ fps/);
+  assert.match(page, /cadence\.variable \? "VFR · "/);
 });

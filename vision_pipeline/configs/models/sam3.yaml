@@ -1,0 +1,32 @@
+model_id: sam3_default
+kind: promptable_segmentation_tracker
+adapter: vision_pipeline.models.sam3.SAM3ModelAdapter
+
+runtime:
+  mode: local
+  provider: transformers
+  model_name: facebook/sam3
+  native_version: sam3
+  checkpoint_path: ""
+  device: cuda
+  device_map: auto
+  dtype: bfloat16
+  processing_device: cpu
+  video_storage_device: cpu
+  inference_state_device: ""
+  max_vision_features_cache_size: 1
+  compile_model: false
+  warm_up: false
+  async_loading_frames: true
+  max_num_objects: 16
+  multiplex_count: 16
+  gpus_to_use: ""
+
+inference:
+  prompts:
+    - person
+  confidence_threshold: 0.5
+  mask_threshold: 0.5
+  max_frame_num_to_track: null
+  show_progress_bar: false
+  include_masks: false

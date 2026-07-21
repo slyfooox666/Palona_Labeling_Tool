@@ -1,0 +1,35 @@
+model_id: qwen3_vl_8b
+kind: vlm
+adapter: vision_pipeline.models.qwen3_vl.Qwen3VLClient
+
+runtime:
+  provider: self_hosted
+  engine: vllm
+  endpoint: ""
+  endpoint_env: QWEN3_VL_ENDPOINT
+  api_key_env: QWEN3_VL_API_KEY
+  model_name: Qwen/Qwen3-VL-8B-Instruct
+
+request:
+  temperature: 0.0
+  max_tokens: 8192
+  response_format: json_object
+  timeout_seconds: 30
+
+inference:
+  default_target: person
+  bbox_coordinate_format: absolute
+  detection_prompt_template: |
+    Find every object matching this target: {target}.
+    Return JSON only with this exact schema:
+    {"detections":[{"label":"string","confidence":0.0,"bbox_xyxy":[x1,y1,x2,y2]}]}.
+    Return at most 20 detections, and do not repeat the same object.
+    Use absolute pixel coordinates in the original image size {width}x{height}.
+    If there are no matching objects, return {"detections":[]}.
+    Do not include markdown fences or explanatory text.
+
+evidence:
+  max_images: 8
+  prefer_contact_sheet: true
+  include_timestamps: true
+  include_track_id: true

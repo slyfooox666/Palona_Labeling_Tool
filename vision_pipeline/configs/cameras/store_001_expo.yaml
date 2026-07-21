@@ -1,0 +1,19 @@
+camera_id: store_001_expo
+purpose: Expo station where prepared baskets wait for pickup.
+
+input:
+  type: rtsp
+  uri_env: STORE_001_EXPO_RTSP_URL
+  fps: 1
+
+frame:
+  width: 2992
+  height: 2992
+
+regions:
+  expo_roi:
+    bbox_xyxy: [500, 500, 1800, 1800]
+
+geometry:
+  homography_id: store_001_expo_v1
+  units: pixels

@@ -1,0 +1,56 @@
+config_version: 1
+use_case_id: line_velocity_v1
+purpose: Measure velocity of customers who are actually waiting or being served at the counter.
+
+input:
+  camera_config: ../cameras/store_001_counter.yaml
+  fps: 5
+
+models:
+  detector:
+    config: ../models/rf_detr.yaml
+    classes:
+      - person
+    confidence_threshold: 0.5
+  tracker:
+    config: ../models/bot_sort.yaml
+    max_lost_seconds: 5
+  vlm:
+    enabled: true
+    config: ../models/qwen3_vl.yaml
+    prompt: ../prompts/classify_line_intent.yaml
+
+regions:
+  include:
+    - queue_zone
+  exclude:
+    - employee_zone
+
+frame_selection:
+  max_frames: 8
+  include_tight_crop: true
+  include_context_crop: true
+  include_nearby_people: true
+  event_frames:
+    - enters_queue_zone
+    - first_stop
+    - employee_interaction
+    - exits_queue_zone
+
+event_logic:
+  include_roles:
+    - waiting_customer
+    - being_served_customer
+  exclude_roles:
+    - employee
+    - passerby
+    - seated_customer
+  min_candidate_seconds: 5
+  velocity_smoothing_seconds: 3
+
+outputs:
+  events:
+    - line_customer_started
+    - line_customer_velocity_updated
+    - line_customer_served
+    - passerby_excluded

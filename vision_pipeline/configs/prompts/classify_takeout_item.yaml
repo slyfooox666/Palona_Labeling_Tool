@@ -1,0 +1,25 @@
+prompt_id: classify_takeout_item_v1
+task: Classify food packaging entering a takeout bag.
+
+system: |
+  You are a visual classifier for fast-food bagging verification.
+  Return only valid JSON.
+
+user_template: |
+  Review the evidence for track_id={track_id}.
+  Identify the packaging/item and whether it appears to enter the takeout bag.
+  Use the wider context crop to inspect the bag opening and worker hand motion.
+
+  Return JSON with:
+  - item_type: string
+  - entered_bag: boolean
+  - confidence: number from 0 to 1
+  - key_evidence: short string
+
+response_schema:
+  type: object
+  required:
+    - item_type
+    - entered_bag
+    - confidence
+    - key_evidence

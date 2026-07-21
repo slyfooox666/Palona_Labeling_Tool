@@ -1,0 +1,31 @@
+config_version: 1
+use_case_id: expo_basket_dwell_sam3_v1
+purpose: Track whether a basket stays in the Expo ROI longer than the dwell threshold.
+
+input:
+  camera_config: ../cameras/store_001_expo.yaml
+  fps: 1
+
+models:
+  sam3:
+    config: ../models/sam3.yaml
+    prompt:
+      - basket
+
+sam3_live:
+  strategy: long_window
+  sample_fps: 1
+  window_seconds: 30
+  stride_seconds: 20
+  roi: [500, 500, 1800, 1800]
+  dwell_threshold_seconds: 120
+  missing_grace_seconds: 20
+  match_iou_threshold: 0.2
+  match_distance_threshold_px: 120
+
+outputs:
+  events:
+    - dwell_time_exceeded
+  evidence:
+    draw_boxes: true
+    video: true

@@ -1,0 +1,27 @@
+prompt_id: classify_xlb_tracklet_v1
+task: Determine whether a tracked object is a xiaolongbao steamer order on the staging table.
+
+system: |
+  You are a visual quality-control classifier for restaurant operations.
+  Return only valid JSON.
+
+user_template: |
+  Review the provided tracklet evidence for track_id={track_id}.
+  Decide whether this is a xiaolongbao steamer basket with a visible paper order ticket on the table.
+  Ignore utensils, towels, loose paper, boxes, trays, hands, and unrelated containers.
+
+  Return JSON with:
+  - is_xlb_order: boolean
+  - visible_ticket: boolean
+  - order_number_text: string or null
+  - confidence: number from 0 to 1
+  - key_evidence: short string
+
+response_schema:
+  type: object
+  required:
+    - is_xlb_order
+    - visible_ticket
+    - order_number_text
+    - confidence
+    - key_evidence

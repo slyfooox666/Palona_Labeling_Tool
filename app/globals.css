@@ -61,7 +61,7 @@ button { color: inherit; }
 .empty-stage p { margin: 7px 0; font-size: 10px; }
 .hover-label { position: absolute; z-index: 3; padding: 6px 8px; border-radius: 5px; background: #05090be6; border: 1px solid #ffffff3b; color: #f4fbff; box-shadow: 0 4px 14px #000a; font: 10px var(--font-geist-mono), monospace; white-space: nowrap; pointer-events: none; }
 .transport { height: 62px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-top: 1px solid var(--line); }
-.transport button { width: 31px; height: 31px; border: 1px solid #34434a; border-radius: 7px; background: #182328; cursor: pointer; color: #aab9bf; font-size: 9px; }
+.transport button { width: 31px; height: 31px; border: 1px solid #34434a; border-radius: 7px; background: #182328; cursor: pointer; color: #aab9bf; font-size: 9px; touch-action: none; user-select: none; }
 .transport button:hover:not(:disabled) { border-color: var(--cyan); color: var(--cyan); }
 .transport button:disabled { opacity: .35; cursor: default; }
 .transport .play-button { width: 36px; height: 36px; border-color: #397486; background: #19343e; color: var(--cyan); font-size: 12px; }

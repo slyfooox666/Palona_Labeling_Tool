@@ -7,6 +7,7 @@ type Track = {
   track_id: string;
   label: string;
   confidence?: number;
+  bbox_xyxy?: [number, number, number, number];
   contours_xy: Point[][];
 };
 type Frame = {
@@ -34,6 +35,8 @@ type Interaction = {
 
 const PALETTE = ["#59d9ff", "#ffcb52", "#a78bfa", "#5ee6a8", "#ff7e9d", "#fb923c", "#67e8f9"];
 const NATURAL_COLLATOR = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
+const STEP_HOLD_DELAY_MS = 350;
+const STEP_REPEAT_MS = 100;
 
 function naturalCompare(left: string, right: string) {
   return NATURAL_COLLATOR.compare(left, right);
@@ -91,6 +94,18 @@ function nearestFrame(frames: Frame[], time: number) {
   return frames[low];
 }
 
+function frameAtOrBefore(frames: Frame[], time: number) {
+  if (!frames.length) return null;
+  let low = 0;
+  let high = frames.length - 1;
+  while (low < high) {
+    const middle = Math.ceil((low + high) / 2);
+    if (frames[middle].timestamp_seconds <= time) low = middle;
+    else high = middle - 1;
+  }
+  return frames[low];
+}
+
 function pointInPolygon(point: Point, polygon: Point[]) {
   let inside = false;
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i, i += 1) {
@@ -116,6 +131,8 @@ export default function Home() {
   const jsonInputRef = useRef<HTMLInputElement>(null);
   const interactionTypeInputRef = useRef<HTMLInputElement>(null);
   const videoUrlRef = useRef<string | null>(null);
+  const stepHoldDelayRef = useRef<number | null>(null);
+  const stepRepeatRef = useRef<number | null>(null);
 
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoName, setVideoName] = useState("No video selected");
@@ -127,6 +144,7 @@ export default function Home() {
   const [message, setMessage] = useState("Choose a video and its control JSON to begin.");
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [presentedTime, setPresentedTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoSize, setVideoSize] = useState({ width: 16, height: 9 });
   const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
@@ -138,7 +156,11 @@ export default function Home() {
   const [editingInteractionId, setEditingInteractionId] = useState<string | null>(null);
   const [exportedInteractionSignature, setExportedInteractionSignature] = useState("");
 
-  const currentFrame = useMemo(() => nearestFrame(data?.frames ?? [], currentTime), [data, currentTime]);
+  const currentFrame = useMemo(
+    () => frameAtOrBefore(data?.frames ?? [], presentedTime),
+    [data, presentedTime],
+  );
+  const currentAnnotationTime = currentFrame?.timestamp_seconds ?? currentTime;
   const selectedInteraction = useMemo(
     () => interactions.find((interaction) => interaction.interaction_id === selectedInteractionId) ?? null,
     [interactions, selectedInteractionId],
@@ -178,13 +200,21 @@ export default function Home() {
     };
   }, [data]);
 
-  const fps = useMemo(() => {
+  const cadence = useMemo(() => {
     const frames = data?.frames ?? [];
-    for (let i = 1; i < Math.min(frames.length, 30); i += 1) {
+    let minimumDelta = Number.POSITIVE_INFINITY;
+    let maximumDelta = 0;
+    for (let i = 1; i < frames.length; i += 1) {
       const delta = frames[i].timestamp_seconds - frames[i - 1].timestamp_seconds;
-      if (delta > 0) return 1 / delta;
+      if (delta > 0) {
+        minimumDelta = Math.min(minimumDelta, delta);
+        maximumDelta = Math.max(maximumDelta, delta);
+      }
     }
-    return 30;
+    if (!Number.isFinite(minimumDelta)) return { averageFps: 30, variable: false };
+    const durationSeconds = frames[frames.length - 1].timestamp_seconds - frames[0].timestamp_seconds;
+    const averageFps = durationSeconds > 0 ? (frames.length - 1) / durationSeconds : 30;
+    return { averageFps, variable: maximumDelta > minimumDelta * 1.5 };
   }, [data]);
 
   const visibleTracks = useMemo(() => (currentFrame?.tracks ?? []).filter(
@@ -210,8 +240,10 @@ export default function Home() {
     for (const track of renderedTracks) {
       const highlighted = track.track_id === hoveredContour?.id;
       const color = colorFor(track.track_id);
+      let drewPolygon = false;
       for (const contour of track.contours_xy ?? []) {
         if (contour.length < 3) continue;
+        drewPolygon = true;
         context.beginPath();
         context.moveTo(contour[0][0], contour[0][1]);
         for (let i = 1; i < contour.length; i += 1) context.lineTo(contour[i][0], contour[i][1]);
@@ -221,6 +253,17 @@ export default function Home() {
         context.lineWidth = highlighted ? Math.max(7, width / 450) : Math.max(3, width / 900);
         context.fill();
         context.stroke();
+      }
+      if (!drewPolygon && track.bbox_xyxy) {
+        const [left, top, right, bottom] = track.bbox_xyxy;
+        context.save();
+        context.setLineDash([Math.max(8, width / 300), Math.max(5, width / 500)]);
+        context.fillStyle = `${color}${highlighted ? "4d" : "1f"}`;
+        context.strokeStyle = highlighted ? "#ffffff" : color;
+        context.lineWidth = highlighted ? Math.max(7, width / 450) : Math.max(3, width / 900);
+        context.fillRect(left, top, right - left, bottom - top);
+        context.strokeRect(left, top, right - left, bottom - top);
+        context.restore();
       }
     }
   }, [hoveredContour?.id, renderedTracks, videoSize]);
@@ -233,9 +276,11 @@ export default function Home() {
     let active = true;
     let frameCallback = 0;
     let animationFrame = 0;
-    const update = () => {
+    const update = (_now?: number, metadata?: { mediaTime?: number }) => {
       if (!active) return;
-      setCurrentTime(video.currentTime);
+      const frameTime = metadata?.mediaTime ?? video.currentTime;
+      setCurrentTime(frameTime);
+      setPresentedTime(frameTime);
       if ("requestVideoFrameCallback" in video) {
         frameCallback = video.requestVideoFrameCallback(update);
       } else {
@@ -252,6 +297,7 @@ export default function Home() {
 
   useEffect(() => () => {
     if (videoUrlRef.current) URL.revokeObjectURL(videoUrlRef.current);
+    stopFrameStepping();
   }, []);
 
   useEffect(() => {
@@ -319,6 +365,7 @@ export default function Home() {
     if (jsonInputRef.current) jsonInputRef.current.value = "";
     setMessage("Video loaded. Select the matching control JSON.");
     setCurrentTime(0);
+    setPresentedTime(0);
     setDuration(0);
     setIsPlaying(false);
     setHoveredContour(null);
@@ -335,34 +382,125 @@ export default function Home() {
     const workerSource = `
       self.onmessage = async ({ data: file }) => {
         try {
-          const raw = JSON.parse(await file.text());
-          const frames = raw.frames.map((frame) => ({
-            frame_index: frame.frame_index,
-            timestamp_seconds: frame.timestamp_seconds,
-            tracks: (frame.tracks || []).map((track) => ({
-              track_id: track.track_id,
-              label: track.label,
-              confidence: track.confidence,
-              contours_xy: track.contours_xy || track.metadata?.contours_xy || [],
-            })),
-          }));
-          self.postMessage({ ok: true, value: { video: raw.video, frames } });
+          const reader = file.stream().getReader();
+          const decoder = new TextDecoder();
+          const framesMarker = /"frames"\\s*:\\s*\\[/;
+          let header = "";
+          let foundFrames = false;
+          let finishedFrames = false;
+          let video;
+          let depth = 0;
+          let inString = false;
+          let escaped = false;
+          let frameText = "";
+          let batch = [];
+          let processed = 0;
+
+          const emitFrame = () => {
+            const frame = JSON.parse(frameText);
+            batch.push({
+              frame_index: frame.frame_index,
+              timestamp_seconds: frame.timestamp_seconds,
+              tracks: (frame.tracks || []).map((track) => ({
+                track_id: track.track_id,
+                label: track.label,
+                confidence: track.confidence,
+                bbox_xyxy: track.bbox_xyxy,
+                contours_xy: track.contours_xy?.length ? track.contours_xy : track.metadata?.contours_xy || [],
+              })),
+            });
+            processed += 1;
+            frameText = "";
+            if (batch.length >= 20) {
+              self.postMessage({ type: "batch", video, frames: batch, processed });
+              batch = [];
+            }
+          };
+
+          const processFrames = (text) => {
+            for (let index = 0; index < text.length && !finishedFrames; index += 1) {
+              const character = text[index];
+              if (depth === 0) {
+                if (character === "{") {
+                  depth = 1;
+                  frameText = character;
+                } else if (character === "]") {
+                  finishedFrames = true;
+                }
+                continue;
+              }
+
+              frameText += character;
+              if (inString) {
+                if (escaped) escaped = false;
+                else if (character.charCodeAt(0) === 92) escaped = true;
+                else if (character.charCodeAt(0) === 34) inString = false;
+              } else if (character.charCodeAt(0) === 34) {
+                inString = true;
+              } else if (character === "{") {
+                depth += 1;
+              } else if (character === "}") {
+                depth -= 1;
+                if (depth === 0) emitFrame();
+              }
+            }
+          };
+
+          while (!finishedFrames) {
+            const { value, done } = await reader.read();
+            const text = decoder.decode(value || new Uint8Array(), { stream: !done });
+            if (!foundFrames) {
+              header += text;
+              const marker = framesMarker.exec(header);
+              if (marker) {
+                const headerObject = JSON.parse(header.slice(0, marker.index) + '"frames":[]}');
+                video = headerObject.video;
+                foundFrames = true;
+                processFrames(header.slice(marker.index + marker[0].length));
+                header = "";
+              } else if (header.length > 5_000_000) {
+                throw new Error("Could not find the frames array near the start of the file.");
+              }
+            } else {
+              processFrames(text);
+            }
+            if (done) break;
+          }
+
+          if (!foundFrames || !finishedFrames || depth !== 0) {
+            throw new Error("The control JSON ended before the frames array was complete.");
+          }
+          if (batch.length) self.postMessage({ type: "batch", video, frames: batch, processed });
+          self.postMessage({ type: "done", video, processed });
+          await reader.cancel();
         } catch (error) {
-          self.postMessage({ ok: false, error: error instanceof Error ? error.message : String(error) });
+          self.postMessage({ type: "error", error: error instanceof Error ? error.message : String(error) });
         }
       };
     `;
     const workerUrl = URL.createObjectURL(new Blob([workerSource], { type: "text/javascript" }));
     const worker = new Worker(workerUrl);
-    worker.onmessage = (workerEvent: MessageEvent<{ ok: boolean; value?: ControlData; error?: string }>) => {
+    const loadedFrames: Frame[] = [];
+    worker.onmessage = (workerEvent: MessageEvent<{
+      type: "batch" | "done" | "error";
+      video?: string;
+      frames?: Frame[];
+      processed?: number;
+      error?: string;
+    }>) => {
+      if (workerEvent.data.type === "batch" && workerEvent.data.frames) {
+        loadedFrames.push(...workerEvent.data.frames);
+        setMessage(`Reading ${file.name}… ${loadedFrames.length.toLocaleString()} frames parsed.`);
+        return;
+      }
       worker.terminate();
       URL.revokeObjectURL(workerUrl);
-      if (!workerEvent.data.ok || !workerEvent.data.value) {
+      if (workerEvent.data.type === "error") {
         setLoadState("error");
         setMessage(`Could not read control JSON: ${workerEvent.data.error ?? "Unknown error"}`);
         return;
       }
-      const nextData = workerEvent.data.value;
+      const nextData: ControlData = { video: workerEvent.data.video, frames: loadedFrames };
       const tracks = new Set<string>();
       for (const frame of nextData.frames) {
         for (const track of frame.tracks) {
@@ -388,9 +526,44 @@ export default function Home() {
     const video = videoRef.current;
     if (!video) return;
     video.pause();
-    const next = Math.min(video.duration || Number.POSITIVE_INFINITY, Math.max(0, video.currentTime + direction / fps));
-    video.currentTime = next;
-    setCurrentTime(next);
+    const frames = data?.frames ?? [];
+    if (!frames.length) {
+      seek(Math.min(video.duration || Number.POSITIVE_INFINITY, Math.max(0, video.currentTime + direction / 30)));
+      return;
+    }
+    const displayedFrame = frameAtOrBefore(frames, video.currentTime);
+    const displayedIndex = displayedFrame ? frames.indexOf(displayedFrame) : 0;
+    const targetIndex = Math.min(frames.length - 1, Math.max(0, displayedIndex + direction));
+    seekToFrame(targetIndex);
+  }
+
+  function stopFrameStepping() {
+    if (stepHoldDelayRef.current !== null) window.clearTimeout(stepHoldDelayRef.current);
+    if (stepRepeatRef.current !== null) window.clearInterval(stepRepeatRef.current);
+    stepHoldDelayRef.current = null;
+    stepRepeatRef.current = null;
+  }
+
+  function startFrameStepping(direction: -1 | 1) {
+    stopFrameStepping();
+    stepFrame(direction);
+    stepHoldDelayRef.current = window.setTimeout(() => {
+      stepRepeatRef.current = window.setInterval(() => stepFrame(direction), STEP_REPEAT_MS);
+    }, STEP_HOLD_DELAY_MS);
+  }
+
+  function seekToFrame(frameIndex: number) {
+    const video = videoRef.current;
+    const frames = data?.frames ?? [];
+    const targetFrame = frames[frameIndex];
+    if (!video || !targetFrame) return;
+    const followingFrame = frames[frameIndex + 1];
+    const seekPosition = followingFrame
+      ? targetFrame.timestamp_seconds + (followingFrame.timestamp_seconds - targetFrame.timestamp_seconds) / 2
+      : targetFrame.timestamp_seconds;
+    video.currentTime = seekPosition;
+    setCurrentTime(targetFrame.timestamp_seconds);
+    setPresentedTime(targetFrame.timestamp_seconds);
   }
 
   function seek(value: number) {
@@ -398,6 +571,8 @@ export default function Home() {
     if (!video) return;
     video.currentTime = value;
     setCurrentTime(value);
+    const targetFrame = frameAtOrBefore(data?.frames ?? [], value);
+    setPresentedTime(targetFrame?.timestamp_seconds ?? value);
   }
 
   function createInteraction() {
@@ -411,7 +586,7 @@ export default function Home() {
       interaction_type: type,
       interaction_id: nextInteractionId(interactions),
       object_id_list: [...selectedTracks].sort(naturalCompare),
-      start_time: annotationTime(currentTime),
+      start_time: annotationTime(currentAnnotationTime),
       end_time: null,
     };
     setInteractionDraft(draft);
@@ -422,14 +597,14 @@ export default function Home() {
 
   function setInteractionStartTime() {
     if (!interactionDraft) return;
-    const startTime = annotationTime(currentTime);
+    const startTime = annotationTime(currentAnnotationTime);
     setInteractionDraft({ ...interactionDraft, start_time: startTime });
     setMessage(`Interaction start set to ${formatTime(startTime)}.`);
   }
 
   function setInteractionEndTime() {
     if (!interactionDraft) return;
-    const endTime = annotationTime(currentTime);
+    const endTime = annotationTime(currentAnnotationTime);
     if (endTime < interactionDraft.start_time) {
       setMessage("The interaction end time cannot be earlier than its start time.");
       return;
@@ -589,9 +764,18 @@ export default function Home() {
     ];
     const hits: { id: string; label: string; area: number }[] = [];
     for (const track of currentFrame?.tracks ?? []) {
+      let hasPolygon = false;
       for (const contour of track.contours_xy ?? []) {
         if (contour.length >= 3 && pointInPolygon(point, contour)) {
+          hasPolygon = true;
           hits.push({ id: track.track_id, label: track.label, area: polygonArea(contour) });
+        }
+        if (contour.length >= 3) hasPolygon = true;
+      }
+      if (!hasPolygon && track.bbox_xyxy) {
+        const [left, top, right, bottom] = track.bbox_xyxy;
+        if (point[0] >= left && point[0] <= right && point[1] >= top && point[1] <= bottom) {
+          hits.push({ id: track.track_id, label: track.label, area: (right - left) * (bottom - top) });
         }
       }
     }
@@ -669,7 +853,12 @@ export default function Home() {
                   }}
                   onPlay={() => setIsPlaying(true)}
                   onPause={() => setIsPlaying(false)}
-                  onSeeked={(event) => setCurrentTime(event.currentTarget.currentTime)}
+                  onSeeked={(event) => {
+                    const time = event.currentTarget.currentTime;
+                    const displayedFrame = frameAtOrBefore(data?.frames ?? [], time);
+                    setCurrentTime(displayedFrame?.timestamp_seconds ?? time);
+                    setPresentedTime(displayedFrame?.timestamp_seconds ?? time);
+                  }}
                   onError={() => setMessage("This browser could not decode the selected video. MKV/HEVC support varies by browser.")}
                 />
                 <canvas
@@ -694,17 +883,41 @@ export default function Home() {
           </div>
 
           <div className="transport">
-            <button aria-label="Previous frame" onClick={() => stepFrame(-1)} disabled={!videoUrl}>│◀</button>
+            <button
+              aria-label="Previous frame"
+              onPointerDown={(event) => {
+                event.preventDefault();
+                event.currentTarget.setPointerCapture(event.pointerId);
+                startFrameStepping(-1);
+              }}
+              onPointerUp={stopFrameStepping}
+              onPointerCancel={stopFrameStepping}
+              onLostPointerCapture={stopFrameStepping}
+              onClick={(event) => { if (event.detail === 0) stepFrame(-1); }}
+              disabled={!videoUrl}
+            >│◀</button>
             <button className="play-button" aria-label={isPlaying ? "Pause" : "Play"} onClick={() => {
               const video = videoRef.current;
               if (!video) return;
               if (video.paused) void video.play(); else video.pause();
             }} disabled={!videoUrl}>{isPlaying ? "Ⅱ" : "▶"}</button>
-            <button aria-label="Next frame" onClick={() => stepFrame(1)} disabled={!videoUrl}>▶│</button>
+            <button
+              aria-label="Next frame"
+              onPointerDown={(event) => {
+                event.preventDefault();
+                event.currentTarget.setPointerCapture(event.pointerId);
+                startFrameStepping(1);
+              }}
+              onPointerUp={stopFrameStepping}
+              onPointerCancel={stopFrameStepping}
+              onLostPointerCapture={stopFrameStepping}
+              onClick={(event) => { if (event.detail === 0) stepFrame(1); }}
+              disabled={!videoUrl}
+            >▶│</button>
             <span className="timecode">{formatTime(currentTime)}</span>
             <input aria-label="Video position" type="range" min="0" max={duration || 0} step="0.001" value={Math.min(currentTime, duration || 0)} onChange={(event) => seek(Number(event.target.value))} disabled={!videoUrl} />
             <span className="timecode muted">{formatTime(duration)}</span>
-            <span className="fps">{fps.toFixed(2)} FPS</span>
+            <span className="fps">{cadence.variable ? "VFR · " : ""}{cadence.averageFps.toFixed(2)} avg FPS</span>
           </div>
           <p className="shortcut-hint"><kbd>Space</kbd> play / pause <kbd>←</kbd><kbd>→</kbd> step one frame</p>
         </div>

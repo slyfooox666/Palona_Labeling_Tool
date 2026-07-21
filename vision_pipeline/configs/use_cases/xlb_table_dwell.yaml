@@ -1,0 +1,49 @@
+config_version: 1
+use_case_id: xlb_table_dwell_v1
+purpose: Track how long each xiaolongbao order remains on the staging table.
+
+input:
+  camera_config: ../cameras/store_001_xlb_table.yaml
+  fps: 2
+
+models:
+  detector:
+    config: ../models/rf_detr.yaml
+    classes:
+      - steamer_basket
+      - paper_ticket
+    confidence_threshold: 0.45
+  tracker:
+    config: ../models/bytetrack.yaml
+    max_lost_seconds: 20
+  vlm:
+    enabled: true
+    config: ../models/qwen3_vl.yaml
+    prompt: ../prompts/classify_xlb_tracklet.yaml
+
+regions:
+  include:
+    - pickup_table
+
+frame_selection:
+  max_frames: 6
+  include_tight_crop: true
+  include_context_crop: true
+  event_frames:
+    - first_seen
+    - highest_confidence
+    - least_occluded
+    - last_seen
+
+event_logic:
+  dwell_start: first_confirmed_seen
+  dwell_end: missing_for_seconds
+  missing_for_seconds: 20
+  alert_if_dwell_exceeds_seconds: 600
+
+outputs:
+  events:
+    - order_candidate_appeared
+    - order_confirmed
+    - order_removed
+    - dwell_time_exceeded

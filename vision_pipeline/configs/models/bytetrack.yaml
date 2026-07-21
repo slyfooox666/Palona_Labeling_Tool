@@ -1,0 +1,11 @@
+model_id: bytetrack_default
+kind: tracker
+adapter: vision_pipeline.models.bytetrack.ByteTrackTracker
+
+parameters:
+  track_threshold: 0.5
+  match_threshold: 0.8
+  new_track_threshold: 0.6
+  frame_rate: 30
+  max_lost_seconds: 10
+  min_track_seconds: 1

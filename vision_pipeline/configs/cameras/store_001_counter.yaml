@@ -1,0 +1,36 @@
+camera_id: store_001_counter
+purpose: Customer counter and service line camera.
+
+input:
+  type: rtsp
+  uri_env: STORE_001_COUNTER_RTSP_URL
+  fps: 5
+
+frame:
+  width: 3840
+  height: 2160
+
+regions:
+  queue_zone:
+    polygon:
+      - [480, 520]
+      - [3020, 500]
+      - [3420, 1780]
+      - [300, 1880]
+  employee_zone:
+    polygon:
+      - [880, 160]
+      - [3300, 180]
+      - [3240, 520]
+      - [760, 520]
+
+geometry:
+  homography_id: store_001_counter_v1
+  units: meters
+  service_path:
+    name: customer_counter_path
+    points:
+      - [0.0, 0.0]
+      - [1.5, 0.0]
+      - [3.0, 0.0]
+      - [5.0, 0.0]

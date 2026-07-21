@@ -1,0 +1,23 @@
+camera_id: store_001_xlb_table
+purpose: Overhead view of xiaolongbao staging table.
+
+input:
+  type: rtsp
+  uri_env: STORE_001_XLB_TABLE_RTSP_URL
+  fps: 2
+
+frame:
+  width: 3840
+  height: 2160
+
+regions:
+  pickup_table:
+    polygon:
+      - [400, 260]
+      - [3420, 240]
+      - [3600, 1900]
+      - [320, 1920]
+
+geometry:
+  homography_id: store_001_xlb_table_v1
+  units: pixels

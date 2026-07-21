@@ -1,0 +1,25 @@
+model_id: bot_sort_people_default
+kind: tracker
+adapter: vision_pipeline.models.bot_sort.BoTSORTTracker
+
+parameters:
+  track_high_threshold: 0.6
+  track_low_threshold: 0.1
+  new_track_threshold: 0.7
+  match_threshold: 0.8
+  iou_match_threshold: 0.3
+  appearance_match_threshold: 0.72
+  center_match_threshold: 0.2
+  appearance_weight: 0.55
+  iou_weight: 0.30
+  center_weight: 0.15
+  max_lost_seconds: 30
+  min_track_seconds: 2
+
+reid:
+  enabled: true
+  model_path: models/bot_sort/reid.onnx
+  fallback: color_histogram
+  histogram_bins: 16
+  proximity_threshold: 0.5
+  appearance_threshold: 0.25

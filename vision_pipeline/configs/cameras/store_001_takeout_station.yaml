@@ -1,0 +1,29 @@
+camera_id: store_001_takeout_station
+purpose: Takeout bagging station camera.
+
+input:
+  type: rtsp
+  uri_env: STORE_001_TAKEOUT_STATION_RTSP_URL
+  fps: 5
+
+frame:
+  width: 3840
+  height: 2160
+
+regions:
+  packing_zone:
+    polygon:
+      - [520, 360]
+      - [3340, 340]
+      - [3500, 1920]
+      - [420, 1940]
+  bag_opening_zone:
+    polygon:
+      - [1400, 760]
+      - [2380, 760]
+      - [2500, 1420]
+      - [1320, 1440]
+
+geometry:
+  homography_id: store_001_takeout_station_v1
+  units: pixels
