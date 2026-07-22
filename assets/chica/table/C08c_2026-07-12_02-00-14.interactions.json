@@ -1,0 +1,206 @@
+{
+  "video": "agent/vision/chica/table/train/C08c_2026-07-12_02-00-14.mkv",
+  "contour": "C08c_2026-07-12_02-00-14.json",
+  "interaction_list": [
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i0",
+      "object_id_list": [
+        "p0:13",
+        "p0:40",
+        "p0:49",
+        "p0:64",
+        "p1:5"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i1",
+      "object_id_list": [
+        "p0:0",
+        "p0:1",
+        "p0:8",
+        "p0:17",
+        "p0:20",
+        "p0:23",
+        "p0:25",
+        "p0:85",
+        "p1:4",
+        "p1:6",
+        "p1:20",
+        "p1:21"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i2",
+      "object_id_list": [
+        "p0:12",
+        "p0:27",
+        "p0:32",
+        "p0:33",
+        "p1:0",
+        "p1:24"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i3",
+      "object_id_list": [
+        "p0:22",
+        "p0:45",
+        "p0:53",
+        "p1:3"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i4",
+      "object_id_list": [
+        "p0:4",
+        "p0:6",
+        "p0:11",
+        "p0:19",
+        "p0:29",
+        "p0:31",
+        "p0:84",
+        "p1:13"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i5",
+      "object_id_list": [
+        "p0:26",
+        "p0:37",
+        "p1:9"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i6",
+      "object_id_list": [
+        "p0:5",
+        "p0:24",
+        "p0:36",
+        "p1:1"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i7",
+      "object_id_list": [
+        "p0:2",
+        "p0:15",
+        "p0:68",
+        "p1:10"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i8",
+      "object_id_list": [
+        "p0:3",
+        "p1:2",
+        "p1:22"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i9",
+      "object_id_list": [
+        "p0:10",
+        "p0:34",
+        "p0:58",
+        "p0:73",
+        "p0:86"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i10",
+      "object_id_list": [
+        "p0:10",
+        "p0:34",
+        "p0:56",
+        "p0:58",
+        "p0:73",
+        "p0:86"
+      ],
+      "start_time": 21.6,
+      "end_time": 24.1
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i11",
+      "object_id_list": [
+        "p0:14",
+        "p0:56"
+      ],
+      "start_time": 25.3,
+      "end_time": 27.233
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i12",
+      "object_id_list": [
+        "p0:14",
+        "p0:71",
+        "p0:81"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i13",
+      "object_id_list": [
+        "p0:9",
+        "p0:16",
+        "p0:39",
+        "p0:52",
+        "p0:60",
+        "p1:14",
+        "p1:19"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i14",
+      "object_id_list": [
+        "p0:9",
+        "p0:16",
+        "p0:39",
+        "p0:52",
+        "p0:60",
+        "p0:61",
+        "p1:14",
+        "p1:19"
+      ],
+      "start_time": 37.6,
+      "end_time": 56.2
+    }
+  ]
+}
