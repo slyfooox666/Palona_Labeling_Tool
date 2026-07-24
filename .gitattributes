@@ -17,3 +17,5 @@ assets/chica/table/C08c_2026-07-12_02-00-14.json filter=lfs diff=lfs merge=lfs -
 assets/chica/table/C08c_2026-07-12_02-00-14.mkv filter=lfs diff=lfs merge=lfs -text
 assets/chica/table/C06_2026-07-12_02-02-13.json filter=lfs diff=lfs merge=lfs -text
 assets/chica/table/C06_2026-07-12_02-02-13.mkv filter=lfs diff=lfs merge=lfs -text
+assets/chica/table/eval/C06_2026-07-12_02-02-13.json filter=lfs diff=lfs merge=lfs -text
+assets/chica/table/eval/C06_2026-07-12_02-02-13.mkv filter=lfs diff=lfs merge=lfs -text
