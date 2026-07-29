@@ -4,6 +4,9 @@ node_modules/
 # Build output
 dist/
 build/
+!build/
+build/*
+!build/sites-vite-plugin.ts
 out/
 .next/
 .vinext/

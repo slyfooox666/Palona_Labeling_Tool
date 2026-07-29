@@ -1,0 +1,62 @@
+{
+  "video": "/home/haih/git/pal-research/agent/vision/dintaifung/dtf/2026-06-23_14-30-00.mp4",
+  "contour": "2026-06-23_14-30-00.json",
+  "interaction_list": [
+    {
+      "interaction_type": "xiaolongbao",
+      "interaction_id": "i0",
+      "object_id_list": [
+        "p0:0"
+      ],
+      "start_time": 50,
+      "end_time": 57
+    },
+    {
+      "interaction_type": "xiaolongbao",
+      "interaction_id": "i1",
+      "object_id_list": [
+        "p0:0"
+      ],
+      "start_time": 130.5,
+      "end_time": 143.5
+    },
+    {
+      "interaction_type": "xiaolongbao",
+      "interaction_id": "i2",
+      "object_id_list": [
+        "p0:2"
+      ],
+      "start_time": 236,
+      "end_time": 260.5
+    },
+    {
+      "interaction_type": "xiaolongbao",
+      "interaction_id": "i3",
+      "object_id_list": [
+        "p0:0",
+        "p0:3"
+      ],
+      "start_time": 278,
+      "end_time": 283
+    },
+    {
+      "interaction_type": "xiaolongbao",
+      "interaction_id": "i4",
+      "object_id_list": [
+        "p0:3",
+        "p1:2"
+      ],
+      "start_time": 346.5,
+      "end_time": 351.5
+    },
+    {
+      "interaction_type": "xiaolongbao",
+      "interaction_id": "i5",
+      "object_id_list": [
+        "p0:2"
+      ],
+      "start_time": 503.5,
+      "end_time": 525
+    }
+  ]
+}

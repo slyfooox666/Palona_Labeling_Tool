@@ -1,0 +1,78 @@
+{
+  "video": "/home/haih/git/pal-research/agent/vision/dintaifung/dtf/2026-06-23_14-40-00.mp4",
+  "contour": "2026-06-23_14-40-00.json",
+  "interaction_list": [
+    {
+      "interaction_type": "xiaolongbao",
+      "interaction_id": "i0",
+      "object_id_list": [
+        "p0:2"
+      ],
+      "start_time": 72,
+      "end_time": 116.5
+    },
+    {
+      "interaction_type": "xiaolongbao",
+      "interaction_id": "i1",
+      "object_id_list": [
+        "p1:2"
+      ],
+      "start_time": 93.5,
+      "end_time": 142
+    },
+    {
+      "interaction_type": "xiaolongbao",
+      "interaction_id": "i2",
+      "object_id_list": [
+        "p1:2"
+      ],
+      "start_time": 146,
+      "end_time": 175
+    },
+    {
+      "interaction_type": "xiaolongbao",
+      "interaction_id": "i3",
+      "object_id_list": [
+        "p0:2"
+      ],
+      "start_time": 145.5,
+      "end_time": 245
+    },
+    {
+      "interaction_type": "xiaolongbao",
+      "interaction_id": "i4",
+      "object_id_list": [
+        "p0:4"
+      ],
+      "start_time": 158.5,
+      "end_time": 262
+    },
+    {
+      "interaction_type": "xiaolongbao",
+      "interaction_id": "i5",
+      "object_id_list": [
+        "p0:6"
+      ],
+      "start_time": 357.5,
+      "end_time": 407
+    },
+    {
+      "interaction_type": "xiaolongbao",
+      "interaction_id": "i6",
+      "object_id_list": [
+        "p0:6"
+      ],
+      "start_time": 434.5,
+      "end_time": 440.5
+    },
+    {
+      "interaction_type": "xiaolongbao",
+      "interaction_id": "i7",
+      "object_id_list": [
+        "p0:6"
+      ],
+      "start_time": 443,
+      "end_time": 523
+    }
+  ]
+}
