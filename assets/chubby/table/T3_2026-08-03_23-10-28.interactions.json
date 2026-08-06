@@ -1,0 +1,123 @@
+{
+  "video": "/home/haih/git/pal-research/agent/vision/chubby/table/train/T3_2026-08-03_23-10-28.mkv",
+  "contour": "T3_2026-08-03_23-10-28.json",
+  "interaction_list": [
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i0",
+      "object_id_list": [
+        "p0:8",
+        "p0:14",
+        "p1:2"
+      ],
+      "start_time": 0,
+      "end_time": 59.967
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i1",
+      "object_id_list": [
+        "p0:9",
+        "p0:11",
+        "p1:0"
+      ],
+      "start_time": 0,
+      "end_time": 59.967
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i2",
+      "object_id_list": [
+        "p0:3",
+        "p0:26"
+      ],
+      "start_time": 0,
+      "end_time": 59.967
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i3",
+      "object_id_list": [
+        "p0:0",
+        "p0:13",
+        "p0:18",
+        "p0:24",
+        "p0:35"
+      ],
+      "start_time": 0,
+      "end_time": 59.967
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i4",
+      "object_id_list": [
+        "p0:12"
+      ],
+      "start_time": 0,
+      "end_time": 59.967
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i5",
+      "object_id_list": [
+        "p0:27",
+        "p0:28"
+      ],
+      "start_time": 0,
+      "end_time": 59.967
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i6",
+      "object_id_list": [
+        "p0:2",
+        "p0:17",
+        "p0:33"
+      ],
+      "start_time": 0,
+      "end_time": 15.2
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i7",
+      "object_id_list": [
+        "p0:10",
+        "p0:21",
+        "p0:29"
+      ],
+      "start_time": 0,
+      "end_time": 59.967
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i8",
+      "object_id_list": [
+        "p0:20",
+        "p0:25"
+      ],
+      "start_time": 0,
+      "end_time": 57.533
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i9",
+      "object_id_list": [
+        "p0:2",
+        "p0:5",
+        "p0:33"
+      ],
+      "start_time": 15.2,
+      "end_time": 59.967
+    },
+    {
+      "interaction_type": "clean_table",
+      "interaction_id": "i10",
+      "object_id_list": [
+        "p0:32",
+        "p1:3"
+      ],
+      "start_time": 45.533,
+      "end_time": 59.967
+    }
+  ]
+}
