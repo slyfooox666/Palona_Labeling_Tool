@@ -32,6 +32,11 @@ type Interaction = {
   start_time: number;
   end_time: number | null;
 };
+type InteractionFile = {
+  video?: string;
+  contour?: string;
+  interaction_list: Interaction[];
+};
 
 const PALETTE = ["#59d9ff", "#ffcb52", "#a78bfa", "#5ee6a8", "#ff7e9d", "#fb923c", "#67e8f9"];
 const NATURAL_COLLATOR = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
@@ -77,6 +82,54 @@ function interactionsEqual(left: Interaction, right: Interaction) {
 
 function cloneInteraction(interaction: Interaction): Interaction {
   return { ...interaction, object_id_list: [...interaction.object_id_list] };
+}
+
+function parseInteractionFile(value: unknown): InteractionFile {
+  if (!value || typeof value !== "object") throw new Error("The interaction JSON must be an object.");
+  const payload = value as Record<string, unknown>;
+  if (!Array.isArray(payload.interaction_list)) {
+    throw new Error("The interaction JSON must contain an interaction_list array.");
+  }
+
+  const usedIds = new Set<string>();
+  const interactionList = payload.interaction_list.map((value, index) => {
+    if (!value || typeof value !== "object") throw new Error(`Interaction ${index + 1} must be an object.`);
+    const item = value as Record<string, unknown>;
+    const interactionType = typeof item.interaction_type === "string" ? item.interaction_type.trim() : "";
+    const interactionId = typeof item.interaction_id === "string" ? item.interaction_id.trim() : "";
+    if (!interactionType) throw new Error(`Interaction ${index + 1} has no interaction_type.`);
+    if (!interactionId) throw new Error(`Interaction ${index + 1} has no interaction_id.`);
+    if (usedIds.has(interactionId)) throw new Error(`Interaction ID ${interactionId} appears more than once.`);
+    usedIds.add(interactionId);
+
+    if (!Array.isArray(item.object_id_list) || item.object_id_list.length === 0
+      || item.object_id_list.some((id) => typeof id !== "string" || !id.trim())) {
+      throw new Error(`Interaction ${interactionId} must have a non-empty string object_id_list.`);
+    }
+    if (typeof item.start_time !== "number" || !Number.isFinite(item.start_time)) {
+      throw new Error(`Interaction ${interactionId} has an invalid start_time.`);
+    }
+    if (item.end_time !== null && (typeof item.end_time !== "number" || !Number.isFinite(item.end_time))) {
+      throw new Error(`Interaction ${interactionId} has an invalid end_time.`);
+    }
+    if (typeof item.end_time === "number" && item.end_time < item.start_time) {
+      throw new Error(`Interaction ${interactionId} ends before it starts.`);
+    }
+
+    return {
+      interaction_type: interactionType,
+      interaction_id: interactionId,
+      object_id_list: [...new Set((item.object_id_list as string[]).map((id) => id.trim()))].sort(naturalCompare),
+      start_time: item.start_time,
+      end_time: item.end_time as number | null,
+    };
+  });
+
+  return {
+    video: typeof payload.video === "string" ? payload.video : undefined,
+    contour: typeof payload.contour === "string" ? payload.contour : undefined,
+    interaction_list: interactionList,
+  };
 }
 
 function nearestFrame(frames: Frame[], time: number) {
@@ -129,6 +182,7 @@ export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
+  const interactionJsonInputRef = useRef<HTMLInputElement>(null);
   const interactionTypeInputRef = useRef<HTMLInputElement>(null);
   const videoUrlRef = useRef<string | null>(null);
   const stepHoldDelayRef = useRef<number | null>(null);
@@ -138,6 +192,7 @@ export default function Home() {
   const [videoName, setVideoName] = useState("No video selected");
   const [videoPath, setVideoPath] = useState("");
   const [jsonName, setJsonName] = useState("No control file selected");
+  const [interactionJsonName, setInteractionJsonName] = useState("No interaction file selected");
   const [contourPath, setContourPath] = useState("");
   const [data, setData] = useState<ControlData | null>(null);
   const [loadState, setLoadState] = useState<"idle" | "reading" | "ready" | "error">("idle");
@@ -353,6 +408,7 @@ export default function Home() {
     setVideoPath(file.webkitRelativePath || file.name);
     setData(null);
     setJsonName("No control file selected");
+    setInteractionJsonName("No interaction file selected");
     setContourPath("");
     setLoadState("idle");
     setSelectedTracks(new Set());
@@ -363,6 +419,7 @@ export default function Home() {
     setEditingInteractionId(null);
     setExportedInteractionSignature("");
     if (jsonInputRef.current) jsonInputRef.current.value = "";
+    if (interactionJsonInputRef.current) interactionJsonInputRef.current.value = "";
     setMessage("Video loaded. Select the matching control JSON.");
     setCurrentTime(0);
     setPresentedTime(0);
@@ -520,6 +577,55 @@ export default function Home() {
     };
     worker.postMessage(file);
     event.target.value = "";
+  }
+
+  async function loadInteractionsJson(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!videoUrl || !data) {
+      event.target.value = "";
+      setMessage("Load the matching video and control JSON before loading saved interactions.");
+      return;
+    }
+    const hasUnexportedInteractions = interactions.length > 0
+      && interactionSignature !== exportedInteractionSignature;
+    if ((hasUnexportedInteractions || hasInteractionChanges)
+      && !window.confirm("Loading an interaction JSON will discard the current unsaved interaction changes.\n\nChoose Cancel to return to editing.")) {
+      event.target.value = "";
+      setMessage("Interaction JSON loading canceled. Your current labeling session is unchanged.");
+      return;
+    }
+
+    try {
+      const interactionText = await file.text();
+      const payload = parseInteractionFile(JSON.parse(interactionText));
+      const loadedInteractions = [...payload.interaction_list]
+        .sort((left, right) => naturalCompare(left.interaction_id, right.interaction_id));
+      const loadedSignature = JSON.stringify(loadedInteractions);
+      const firstInteraction = loadedInteractions[0] ?? null;
+
+      setInteractionJsonName(file.name);
+      setInteractions(loadedInteractions);
+      setExportedInteractionSignature(loadedSignature);
+      setInteractionType("");
+      setSelectedInteractionId(firstInteraction?.interaction_id ?? null);
+      setEditingInteractionId(firstInteraction?.interaction_id ?? null);
+      setInteractionDraft(firstInteraction ? cloneInteraction(firstInteraction) : null);
+      setSelectedTracks(firstInteraction ? new Set(firstInteraction.object_id_list) : new Set());
+      if (firstInteraction) seek(firstInteraction.start_time);
+
+      const controlName = jsonName === "No control file selected" ? "" : jsonName;
+      const importedContourName = payload.contour?.split(/[\\/]/).pop() ?? "";
+      const contourWarning = controlName && importedContourName && controlName !== importedContourName
+        ? ` Warning: it references ${importedContourName}, but ${controlName} is loaded.`
+        : "";
+      const nextStep = firstInteraction ? " The first interaction is open for inspection." : "";
+      setMessage(`Loaded ${loadedInteractions.length.toLocaleString()} saved interactions from ${file.name}.${nextStep}${contourWarning}`);
+    } catch (error) {
+      setMessage(`Could not read interaction JSON: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      event.target.value = "";
+    }
   }
 
   function stepFrame(direction: -1 | 1) {
@@ -826,8 +932,19 @@ export default function Home() {
           <span><strong>Control JSON</strong><small>{jsonName}</small></span>
           <b>{loadState === "reading" ? "Reading…" : "Choose"}</b>
         </button>
+        <button
+          className="file-card"
+          onClick={() => interactionJsonInputRef.current?.click()}
+          disabled={loadState === "reading" || !videoUrl || !data}
+          title={!videoUrl || !data ? "Load the matching video and control JSON first" : "Load saved interactions"}
+        >
+          <span className="file-icon interaction-json">↥</span>
+          <span><strong>Interaction JSON</strong><small>{interactionJsonName}</small></span>
+          <b>Load</b>
+        </button>
         <input ref={videoInputRef} className="visually-hidden" type="file" accept="video/*,.mkv" onChange={loadVideo} />
         <input ref={jsonInputRef} className="visually-hidden" type="file" accept="application/json,.json" onChange={loadJson} />
+        <input ref={interactionJsonInputRef} className="visually-hidden" type="file" accept="application/json,.json" onChange={loadInteractionsJson} />
         <p className="session-message">{message}</p>
       </section>
 

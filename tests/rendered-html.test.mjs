@@ -24,6 +24,7 @@ test("server-renders the contour labeling workspace", async () => {
   assert.match(html, /Palona contour lab/);
   assert.match(html, /Video clip/);
   assert.match(html, /Control JSON/);
+  assert.match(html, /Interaction JSON/);
   assert.match(html, /Contours/);
   assert.match(html, /Create interaction/);
   assert.match(html, /Defined interactions/);
@@ -40,6 +41,15 @@ test("includes frame sync, contour hit testing, and local file support", async (
   assert.match(page, /stepFrame\(-1\)/);
   assert.match(page, /stepFrame\(1\)/);
   assert.match(page, /accept="video\/\*,\.mkv"/);
+  assert.match(page, /function parseInteractionFile/);
+  assert.match(page, /payload\.interaction_list/);
+  assert.match(page, /function loadInteractionsJson/);
+  assert.match(page, /const interactionText = await file\.text\(\)/);
+  assert.match(page, /parseInteractionFile\(JSON\.parse\(interactionText\)\)/);
+  assert.match(page, /setInteractions\(loadedInteractions\)/);
+  assert.match(page, /setExportedInteractionSignature\(loadedSignature\)/);
+  assert.match(page, /setInteractionDraft\(firstInteraction \? cloneInteraction\(firstInteraction\) : null\)/);
+  assert.match(page, /Interaction ID \$\{interactionId\} appears more than once/);
   assert.match(page, /new Worker/);
   assert.match(page, /file\.stream\(\)\.getReader\(\)/);
   assert.match(page, /type: "batch"/);

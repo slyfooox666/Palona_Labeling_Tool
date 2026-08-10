@@ -21,6 +21,10 @@ Then open `http://localhost:3000`.
 4. Use the object-type and track-ID checkboxes to control visible contours.
 5. Hover inside a visible contour to highlight it; click it to hide that track.
 
+To continue or review prior work, first load the matching video and control JSON,
+then load the exported `*.interactions.json` with the **Interaction JSON** button.
+The saved interactions are restored into the editor for inspection and editing.
+
 The sample files are in `assets/chica/table`. Control files are parsed in a Web Worker so the interface remains responsive while large JSON files load.
 
 MKV/HEVC decoding is provided by the browser and operating system. If a browser cannot decode a selected clip, use a browser with native HEVC support or convert the clip to H.264 MP4 before loading it.
