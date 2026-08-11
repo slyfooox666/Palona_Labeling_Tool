@@ -682,7 +682,7 @@ export default function Home() {
   }
 
   function createInteraction() {
-    const type = (interactionDraft?.interaction_type ?? interactionType).trim();
+    const type = interactionType.trim();
     if (!type) {
       setMessage("Enter an interaction type before creating the interaction.");
       interactionTypeInputRef.current?.focus();
@@ -800,6 +800,30 @@ export default function Home() {
     setEditingInteractionId(null);
     setInteractionType("");
     setMessage("Interaction draft discarded.");
+  }
+
+  function deleteInteraction() {
+    if (!originalInteraction) return;
+
+    const interactionId = originalInteraction.interaction_id;
+    const interactionTypeToDelete = originalInteraction.interaction_type;
+    const shouldDelete = window.confirm(
+      `Delete saved interaction ${interactionId} (${interactionTypeToDelete})?\n\nThis change is not written to disk until you export the interaction JSON again.`,
+    );
+    if (!shouldDelete) {
+      setMessage("Interaction deletion canceled.");
+      return;
+    }
+
+    setInteractions((current) => current.filter(
+      (interaction) => interaction.interaction_id !== interactionId,
+    ));
+    setInteractionDraft(null);
+    setEditingInteractionId(null);
+    setSelectedInteractionId(null);
+    setSelectedTracks(new Set());
+    setInteractionType("");
+    setMessage(`Deleted interaction ${interactionId}. Export JSON to save this change.`);
   }
 
   function exportInteractions() {
@@ -1098,14 +1122,8 @@ export default function Home() {
                 ref={interactionTypeInputRef}
                 id="interaction-type"
                 list="interaction-type-options"
-                value={interactionDraft?.interaction_type ?? interactionType}
-                onChange={(event) => {
-                  if (interactionDraft) {
-                    setInteractionDraft({ ...interactionDraft, interaction_type: event.target.value });
-                  } else {
-                    setInteractionType(event.target.value);
-                  }
-                }}
+                value={interactionType}
+                onChange={(event) => setInteractionType(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") createInteraction();
                 }}
@@ -1124,7 +1142,20 @@ export default function Home() {
                 <span className={originalInteraction ? "saved-badge" : "draft-badge"}>{originalInteraction ? "Editing" : "Draft"}</span>
                 <strong>{displayedInteraction.interaction_type}</strong>
               </div>
-              <label className="interaction-id-field" htmlFor="interaction-id">
+              <label className="interaction-field" htmlFor="interaction-edit-type">
+                <span>Interaction type</span>
+                <input
+                  id="interaction-edit-type"
+                  list="interaction-type-options"
+                  value={interactionDraft?.interaction_type ?? displayedInteraction.interaction_type}
+                  onChange={(event) => {
+                    if (interactionDraft) {
+                      setInteractionDraft({ ...interactionDraft, interaction_type: event.target.value });
+                    }
+                  }}
+                />
+              </label>
+              <label className="interaction-field" htmlFor="interaction-id">
                 <span>Interaction ID</span>
                 <input
                   id="interaction-id"
@@ -1145,7 +1176,8 @@ export default function Home() {
               </div>
               <div className="interaction-actions">
                 <button className="save-action" onClick={saveInteraction} disabled={!hasInteractionChanges}>Save</button>
-                <button className="danger-action" onClick={discardInteraction}>{originalInteraction ? "Discard changes" : "Discard"}</button>
+                <button onClick={discardInteraction}>{originalInteraction ? "Discard changes" : "Discard"}</button>
+                {originalInteraction ? <button className="delete-action" onClick={deleteInteraction}>Delete interaction</button> : null}
               </div>
             </div>
           ) : (

@@ -23,7 +23,9 @@ Then open `http://localhost:3000`.
 
 To continue or review prior work, first load the matching video and control JSON,
 then load the exported `*.interactions.json` with the **Interaction JSON** button.
-The saved interactions are restored into the editor for inspection and editing.
+The saved interactions are restored into the editor for inspection and editing. Select an
+interaction to change its type or delete it, then export the interaction JSON again to persist
+the changes.
 
 The sample files are in `assets/chica/table`. Control files are parsed in a Web Worker so the interface remains responsive while large JSON files load.
 
