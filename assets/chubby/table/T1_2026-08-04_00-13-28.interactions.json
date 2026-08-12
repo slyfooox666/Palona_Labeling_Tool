@@ -1,5 +1,5 @@
 {
-  "video": "agent/vision/chubby/table/train/T1_2026-08-04_00-13-28.mkv",
+  "video": "/home/haih/git/pal-research/agent/vision/chubby/table/train/T1_2026-08-04_00-13-28.mkv",
   "contour": "T1_2026-08-04_00-13-28.json",
   "interaction_list": [
     {
@@ -95,6 +95,18 @@
       ],
       "start_time": 0.7,
       "end_time": 31.4
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i8",
+      "object_id_list": [
+        "p0:17",
+        "p0:20",
+        "p0:23",
+        "p0:28"
+      ],
+      "start_time": 0,
+      "end_time": 59.967
     }
   ]
 }

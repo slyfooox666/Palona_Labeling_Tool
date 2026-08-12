@@ -1,5 +1,5 @@
 {
-  "video": "agent/vision/chubby/table/train/T2_2026-08-03_23-37-28.mkv",
+  "video": "/home/haih/git/pal-research/agent/vision/chubby/table/train/T2_2026-08-03_23-37-28.mkv",
   "contour": "T2_2026-08-03_23-37-28.json",
   "interaction_list": [
     {
@@ -96,6 +96,38 @@
       ],
       "start_time": 33.7,
       "end_time": 50.133
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i9",
+      "object_id_list": [
+        "p0:13",
+        "p0:14",
+        "p0:19"
+      ],
+      "start_time": 0,
+      "end_time": 25.2
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i10",
+      "object_id_list": [
+        "p0:13",
+        "p0:19",
+        "p0:22"
+      ],
+      "start_time": 38.4,
+      "end_time": 47.233
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i11",
+      "object_id_list": [
+        "p0:9",
+        "p0:19"
+      ],
+      "start_time": 50.233,
+      "end_time": 59.967
     }
   ]
 }
