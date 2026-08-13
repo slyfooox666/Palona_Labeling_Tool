@@ -1,0 +1,26 @@
+{
+  "video": "/home/haih/git/pal-research/agent/vision/chubby/table2/train/C10_2026-08-07_23-27-50.mkv",
+  "contour": "C10_2026-08-07_23-27-50.json",
+  "interaction_list": [
+    {
+      "interaction_type": "clean_table",
+      "interaction_id": "i0",
+      "object_id_list": [
+        "p0:3",
+        "p1:0"
+      ],
+      "start_time": 29.96,
+      "end_time": 45.12
+    },
+    {
+      "interaction_type": "clean_table",
+      "interaction_id": "i1",
+      "object_id_list": [
+        "p0:3",
+        "p1:0"
+      ],
+      "start_time": 52.8,
+      "end_time": 58.68
+    }
+  ]
+}
