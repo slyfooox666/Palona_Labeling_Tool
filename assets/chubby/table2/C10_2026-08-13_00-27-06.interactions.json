@@ -1,0 +1,17 @@
+{
+  "video": "/home/zachhuang/git/pal-research/agent/vision/chubby/table2/train/C10_2026-08-13_00-27-06.mkv",
+  "contour": "C10_2026-08-13_00-27-06.json",
+  "interaction_list": [
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i0",
+      "object_id_list": [
+        "p0:7",
+        "p0:9",
+        "p1:0"
+      ],
+      "start_time": 55.5,
+      "end_time": 60
+    }
+  ]
+}
