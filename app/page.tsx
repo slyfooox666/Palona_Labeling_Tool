@@ -15,8 +15,18 @@ type Frame = {
   timestamp_seconds: number;
   tracks: Track[];
 };
+type VisualAidLine = {
+  id?: string;
+  label?: string;
+  points: [Point, Point];
+  color?: string;
+};
+type VisualAids = {
+  lines: VisualAidLine[];
+};
 type ControlData = {
   video?: string;
+  visual_aids?: VisualAids;
   frames: Frame[];
 };
 type HoveredContour = {
@@ -62,6 +72,72 @@ function formatTime(seconds: number) {
 
 function annotationTime(seconds: number) {
   return Number(seconds.toFixed(3));
+}
+
+function parseVisualAids(value: unknown): VisualAids | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const payload = value as Record<string, unknown>;
+  if (!Array.isArray(payload.lines)) return undefined;
+  const lines = payload.lines.flatMap((value, index): VisualAidLine[] => {
+    if (!value || typeof value !== "object") return [];
+    const line = value as Record<string, unknown>;
+    if (!Array.isArray(line.points) || line.points.length !== 2) return [];
+    const points = line.points.map((point) => {
+      if (!Array.isArray(point) || point.length !== 2
+        || point.some((coordinate) => typeof coordinate !== "number" || !Number.isFinite(coordinate))) return null;
+      return [point[0], point[1]] as Point;
+    });
+    if (!points.every(Boolean)) return [];
+    return [{
+      id: typeof line.id === "string" ? line.id : `line-${index + 1}`,
+      label: typeof line.label === "string" ? line.label : undefined,
+      points: points as [Point, Point],
+      color: typeof line.color === "string" ? line.color : undefined,
+    }];
+  });
+  return lines.length ? { lines } : undefined;
+}
+
+function drawReferenceLine(
+  context: CanvasRenderingContext2D,
+  line: VisualAidLine,
+  fallbackLabel: string,
+  fallbackColor: string,
+  width: number,
+) {
+  const { points, label = fallbackLabel, color = fallbackColor } = line;
+  const [[startX, startY], [endX, endY]] = points;
+  context.save();
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  context.beginPath();
+  context.moveTo(startX, startY);
+  context.lineTo(endX, endY);
+  context.strokeStyle = "#05090bcc";
+  context.lineWidth = width + 5;
+  context.stroke();
+  context.strokeStyle = color;
+  context.lineWidth = width;
+  context.stroke();
+  for (const [x, y] of points) {
+    context.beginPath();
+    context.arc(x, y, width + 2, 0, Math.PI * 2);
+    context.fillStyle = "#05090b";
+    context.fill();
+    context.beginPath();
+    context.arc(x, y, width, 0, Math.PI * 2);
+    context.fillStyle = color;
+    context.fill();
+  }
+  context.font = `700 ${Math.max(13, width * 4)}px Arial, sans-serif`;
+  const labelWidth = context.measureText(label).width;
+  const labelX = Math.min(startX, endX) + 10;
+  const labelY = Math.min(startY, endY) - 9;
+  context.fillStyle = "#05090bcc";
+  context.fillRect(labelX - 5, labelY - 16, labelWidth + 10, 22);
+  context.fillStyle = color;
+  context.fillText(label, labelX, labelY);
+  context.restore();
 }
 
 function nextInteractionId(interactions: Interaction[]) {
@@ -203,6 +279,7 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoSize, setVideoSize] = useState({ width: 16, height: 9 });
   const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
+  const [showLineOverlay, setShowLineOverlay] = useState(true);
   const [hoveredContour, setHoveredContour] = useState<HoveredContour | null>(null);
   const [interactionType, setInteractionType] = useState("");
   const [interactionDraft, setInteractionDraft] = useState<Interaction | null>(null);
@@ -321,7 +398,15 @@ export default function Home() {
         context.restore();
       }
     }
-  }, [hoveredContour?.id, renderedTracks, videoSize]);
+
+    if (showLineOverlay && data?.visual_aids) {
+      const lineWidth = Math.max(2, width / 640);
+      const colors = ["#facc15", "#f472b6", "#5ee6a8", "#59d9ff"];
+      data.visual_aids.lines.forEach((line, index) => {
+        drawReferenceLine(context, line, `LINE ${index + 1}`, colors[index % colors.length], lineWidth);
+      });
+    }
+  }, [data?.visual_aids, hoveredContour?.id, renderedTracks, showLineOverlay, videoSize]);
 
   useEffect(() => draw(), [draw]);
 
@@ -426,6 +511,7 @@ export default function Home() {
     setDuration(0);
     setIsPlaying(false);
     setHoveredContour(null);
+    setShowLineOverlay(true);
   }
 
   function loadJson(event: ChangeEvent<HTMLInputElement>) {
@@ -446,6 +532,7 @@ export default function Home() {
           let foundFrames = false;
           let finishedFrames = false;
           let video;
+          let visualAids;
           let depth = 0;
           let inString = false;
           let escaped = false;
@@ -512,6 +599,7 @@ export default function Home() {
               if (marker) {
                 const headerObject = JSON.parse(header.slice(0, marker.index) + '"frames":[]}');
                 video = headerObject.video;
+                visualAids = headerObject.visual_aids;
                 foundFrames = true;
                 processFrames(header.slice(marker.index + marker[0].length));
                 header = "";
@@ -527,8 +615,8 @@ export default function Home() {
           if (!foundFrames || !finishedFrames || depth !== 0) {
             throw new Error("The control JSON ended before the frames array was complete.");
           }
-          if (batch.length) self.postMessage({ type: "batch", video, frames: batch, processed });
-          self.postMessage({ type: "done", video, processed });
+          if (batch.length) self.postMessage({ type: "batch", video, visualAids, frames: batch, processed });
+          self.postMessage({ type: "done", video, visualAids, processed });
           await reader.cancel();
         } catch (error) {
           self.postMessage({ type: "error", error: error instanceof Error ? error.message : String(error) });
@@ -541,6 +629,7 @@ export default function Home() {
     worker.onmessage = (workerEvent: MessageEvent<{
       type: "batch" | "done" | "error";
       video?: string;
+      visualAids?: unknown;
       frames?: Frame[];
       processed?: number;
       error?: string;
@@ -557,7 +646,11 @@ export default function Home() {
         setMessage(`Could not read control JSON: ${workerEvent.data.error ?? "Unknown error"}`);
         return;
       }
-      const nextData: ControlData = { video: workerEvent.data.video, frames: loadedFrames };
+      const nextData: ControlData = {
+        video: workerEvent.data.video,
+        visual_aids: parseVisualAids(workerEvent.data.visualAids),
+        frames: loadedFrames,
+      };
       const tracks = new Set<string>();
       for (const frame of nextData.frames) {
         for (const track of frame.tracks) {
@@ -565,9 +658,10 @@ export default function Home() {
         }
       }
       setData(nextData);
+      setShowLineOverlay(true);
       setSelectedTracks(tracks);
       setLoadState("ready");
-      setMessage(`${nextData.frames.length.toLocaleString()} annotated frames loaded.`);
+      setMessage(`${nextData.frames.length.toLocaleString()} annotated frames loaded${nextData.visual_aids ? " with visual aids" : ""}.`);
     };
     worker.onerror = (error) => {
       worker.terminate();
@@ -1068,6 +1162,13 @@ export default function Home() {
           <div className="inspector-title">
             <div><span className="eyebrow">OVERLAY FILTERS</span><h2>Contours</h2></div>
             <div className="inspector-title-actions">
+              {data?.visual_aids ? (
+                <button
+                  className={showLineOverlay ? "active" : ""}
+                  aria-pressed={showLineOverlay}
+                  onClick={() => setShowLineOverlay((visible) => !visible)}
+                >{showLineOverlay ? "Lines on" : "Lines off"}</button>
+              ) : null}
               <span>{selectedTracks.size}/{catalog.tracks.length}</span>
               <button onClick={() => setSelectedTracks(new Set())} disabled={!selectedTracks.size}>Clear selection</button>
             </div>

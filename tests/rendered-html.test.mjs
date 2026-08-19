@@ -129,4 +129,12 @@ test("includes frame sync, contour hit testing, and local file support", async (
   assert.match(page, /setCurrentTime\(targetFrame\.timestamp_seconds\)/);
   assert.doesNotMatch(page, /video\.currentTime \+ direction \/ fps/);
   assert.match(page, /cadence\.variable \? "VFR · "/);
+  assert.match(page, /function parseVisualAids/);
+  assert.match(page, /function drawReferenceLine/);
+  assert.match(page, /headerObject\.visual_aids/);
+  assert.match(page, /data\.visual_aids\.lines/);
+  assert.match(page, /line\.points/);
+  assert.match(page, /Lines on/);
+  assert.match(page, /Lines off/);
+  assert.match(page, /aria-pressed=\{showLineOverlay\}/);
 });
