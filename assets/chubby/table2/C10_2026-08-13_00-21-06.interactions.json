@@ -1,0 +1,50 @@
+{
+  "video": "/home/zachhuang/git/pal-research/agent/vision/chubby/table2/train/C10_2026-08-13_00-21-06.mkv",
+  "contour": "C10_2026-08-13_00-21-06.json",
+  "interaction_list": [
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i0",
+      "object_id_list": [
+        "p0:1",
+        "p0:8",
+        "p1:0"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i1",
+      "object_id_list": [
+        "p0:4",
+        "p1:3"
+      ],
+      "start_time": 0,
+      "end_time": 60
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i2",
+      "object_id_list": [
+        "p0:1",
+        "p0:8",
+        "p0:10",
+        "p1:0"
+      ],
+      "start_time": 17.917,
+      "end_time": 19
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i3",
+      "object_id_list": [
+        "p0:4",
+        "p0:10",
+        "p1:3"
+      ],
+      "start_time": 30.167,
+      "end_time": 44.667
+    }
+  ]
+}

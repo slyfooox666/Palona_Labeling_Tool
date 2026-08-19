@@ -1,0 +1,108 @@
+{
+  "video": "/home/zachhuang/git/pal-research/agent/vision/chubby/table2/train/C10_2026-08-08_22-05-14.mkv",
+  "contour": "C10_2026-08-08_22-05-14.json",
+  "interaction_list": [
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i0",
+      "object_id_list": [
+        "p0:0",
+        "p0:2",
+        "p0:10",
+        "p1:2"
+      ],
+      "start_time": 0,
+      "end_time": 59.96
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i1",
+      "object_id_list": [
+        "p0:5",
+        "p0:6",
+        "p0:8",
+        "p0:9"
+      ],
+      "start_time": 0,
+      "end_time": 31.2
+    },
+    {
+      "interaction_type": "table_occupied",
+      "interaction_id": "i2",
+      "object_id_list": [
+        "p0:5",
+        "p0:6",
+        "p0:9"
+      ],
+      "start_time": 31.24,
+      "end_time": 59.96
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i3",
+      "object_id_list": [
+        "p0:0",
+        "p0:2",
+        "p0:10",
+        "p0:11",
+        "p1:2"
+      ],
+      "start_time": 1.56,
+      "end_time": 11.84
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i4",
+      "object_id_list": [
+        "p0:5",
+        "p0:6",
+        "p0:8",
+        "p0:9",
+        "p0:14",
+        "p1:1"
+      ],
+      "start_time": 12.28,
+      "end_time": 15.32
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i5",
+      "object_id_list": [
+        "p0:0",
+        "p0:2",
+        "p0:10",
+        "p0:14",
+        "p0:16",
+        "p1:2"
+      ],
+      "start_time": 37.36,
+      "end_time": 40.24
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i6",
+      "object_id_list": [
+        "p0:5",
+        "p0:6",
+        "p0:9",
+        "p0:20",
+        "p1:1"
+      ],
+      "start_time": 49.24,
+      "end_time": 52.92
+    },
+    {
+      "interaction_type": "table_touch",
+      "interaction_id": "i7",
+      "object_id_list": [
+        "p0:3",
+        "p0:5",
+        "p0:6",
+        "p0:9",
+        "p1:1"
+      ],
+      "start_time": 50.36,
+      "end_time": 54.68
+    }
+  ]
+}
