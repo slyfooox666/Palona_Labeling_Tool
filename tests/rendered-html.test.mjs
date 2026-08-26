@@ -91,6 +91,7 @@ test("includes frame sync, contour hit testing, and local file support", async (
   assert.match(page, /manual_objects: sortedManualObjects/);
   assert.match(page, /checked=\{selectedTracks\.has\(manualObject\.object_id\)\}/);
   assert.match(page, /onChange=\{\(\) => toggleTrack\(manualObject\.object_id\)\}/);
+  assert.match(page, /manualObject\.object_id !== editingManualObjectId\s*&& selectedTracks\.has\(manualObject\.object_id\)/);
   assert.match(page, /if \(manualObjectDraft\) \{/);
   assert.match(page, /appendManualObjectPoint\(event\)/);
   assert.match(page, /manualObjectIds\.has\(objectId\)/);

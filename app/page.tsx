@@ -431,10 +431,11 @@ export default function Home() {
   ), [currentFrame, hoveredContour?.id, selectedTracks]);
   const renderedManualObjects = useMemo(() => {
     const saved = manualObjects.filter(
-      (manualObject) => manualObject.object_id !== editingManualObjectId,
+      (manualObject) => manualObject.object_id !== editingManualObjectId
+        && selectedTracks.has(manualObject.object_id),
     );
     return manualObjectDraft ? [...saved, manualObjectDraft] : saved;
-  }, [editingManualObjectId, manualObjectDraft, manualObjects]);
+  }, [editingManualObjectId, manualObjectDraft, manualObjects, selectedTracks]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
