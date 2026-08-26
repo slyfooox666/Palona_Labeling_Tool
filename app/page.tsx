@@ -1506,6 +1506,18 @@ export default function Home() {
             <div><span className="eyebrow">STATIC POLYGONS</span><h2>Manual objects</h2></div>
             <div className="manual-objects-title-actions">
               <span>{manualObjects.length}</span>
+              <button
+                onClick={() => interactionJsonInputRef.current?.click()}
+                disabled={loadState === "reading" || !videoUrl || !data}
+                aria-label="Load manual objects JSON"
+                title={!videoUrl || !data ? "Load the matching video and control JSON first" : "Load manual objects and interactions"}
+              >Load</button>
+              <button
+                onClick={exportInteractions}
+                disabled={!interactions.length && !manualObjects.length}
+                aria-label="Export manual objects JSON"
+                title="Export manual objects and interactions"
+              >Export</button>
               <button onClick={createManualObject}>Create</button>
             </div>
           </div>

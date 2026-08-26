@@ -94,6 +94,10 @@ test("includes frame sync, contour hit testing, and local file support", async (
   assert.match(page, /if \(manualObjectDraft\) \{/);
   assert.match(page, /appendManualObjectPoint\(event\)/);
   assert.match(page, /manualObjectIds\.has\(objectId\)/);
+  assert.match(page, /Load manual objects and interactions/);
+  assert.match(page, /aria-label="Load manual objects JSON"/);
+  assert.match(page, /aria-label="Export manual objects JSON"/);
+  assert.match(page, /onClick=\{exportInteractions\}/);
   assert.match(page, /id="interaction-id"/);
   assert.match(page, /id="interaction-edit-type"/);
   assert.match(page, /interaction_type: event\.target\.value/);
