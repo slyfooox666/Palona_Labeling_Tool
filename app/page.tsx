@@ -313,6 +313,7 @@ export default function Home() {
   const videoInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
   const interactionJsonInputRef = useRef<HTMLInputElement>(null);
+  const manualObjectJsonInputRef = useRef<HTMLInputElement>(null);
   const interactionTypeInputRef = useRef<HTMLInputElement>(null);
   const videoUrlRef = useRef<string | null>(null);
   const stepHoldDelayRef = useRef<number | null>(null);
@@ -345,6 +346,7 @@ export default function Home() {
   const [selectedManualObjectId, setSelectedManualObjectId] = useState<string | null>(null);
   const [editingManualObjectId, setEditingManualObjectId] = useState<string | null>(null);
   const [exportedInteractionSignature, setExportedInteractionSignature] = useState("");
+  const [loadedManualObjectSignature, setLoadedManualObjectSignature] = useState("");
 
   const currentFrame = useMemo(
     () => frameAtOrBefore(data?.frames ?? [], presentedTime),
@@ -378,6 +380,10 @@ export default function Home() {
   const sortedManualObjects = useMemo(
     () => [...manualObjects].sort((left, right) => naturalCompare(left.object_id, right.object_id)),
     [manualObjects],
+  );
+  const manualObjectSignature = useMemo(
+    () => JSON.stringify(sortedManualObjects),
+    [sortedManualObjects],
   );
   const interactionSignature = useMemo(() => JSON.stringify({
     manual_objects: sortedManualObjects,
@@ -623,8 +629,10 @@ export default function Home() {
     setSelectedInteractionId(null);
     setEditingInteractionId(null);
     setExportedInteractionSignature("");
+    setLoadedManualObjectSignature("");
     if (jsonInputRef.current) jsonInputRef.current.value = "";
     if (interactionJsonInputRef.current) interactionJsonInputRef.current.value = "";
+    if (manualObjectJsonInputRef.current) manualObjectJsonInputRef.current.value = "";
     setMessage("Video loaded. Select the matching control JSON.");
     setCurrentTime(0);
     setPresentedTime(0);
@@ -831,6 +839,7 @@ export default function Home() {
       setSelectedManualObjectId(null);
       setEditingManualObjectId(null);
       setExportedInteractionSignature(loadedSignature);
+      setLoadedManualObjectSignature(JSON.stringify(loadedManualObjects));
       setInteractionType("");
       setSelectedInteractionId(firstInteraction?.interaction_id ?? null);
       setEditingInteractionId(firstInteraction?.interaction_id ?? null);
@@ -847,6 +856,80 @@ export default function Home() {
       setMessage(`Loaded ${loadedInteractions.length.toLocaleString()} saved interactions and ${loadedManualObjects.length.toLocaleString()} manual objects from ${file.name}.${nextStep}${contourWarning}`);
     } catch (error) {
       setMessage(`Could not read interaction JSON: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      event.target.value = "";
+    }
+  }
+
+  async function loadManualObjectsJson(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!videoUrl || !data) {
+      event.target.value = "";
+      setMessage("Load the matching video and control JSON before loading manual objects.");
+      return;
+    }
+    const hasUnexportedManualObjects = manualObjectSignature !== loadedManualObjectSignature;
+    if ((hasUnexportedManualObjects || hasManualObjectChanges)
+      && !window.confirm("Loading manual objects will replace the current manual objects and discard unsaved manual-object changes. Existing interactions will be preserved.\n\nChoose Cancel to return to editing.")) {
+      event.target.value = "";
+      setMessage("Manual-object loading canceled. Your current labeling session is unchanged.");
+      return;
+    }
+
+    try {
+      const interactionText = await file.text();
+      const payload = parseInteractionFile(JSON.parse(interactionText));
+      const loadedManualObjects = [...payload.manual_objects]
+        .sort((left, right) => naturalCompare(left.object_id, right.object_id));
+      const conflictingIds = loadedManualObjects
+        .map((manualObject) => manualObject.object_id)
+        .filter((objectId) => catalog.tracks.some((track) => track.id === objectId));
+      if (conflictingIds.length) {
+        throw new Error(`Manual object IDs conflict with tracked objects: ${conflictingIds.join(", ")}`);
+      }
+
+      const previousManualObjectIds = new Set(
+        manualObjects.map((manualObject) => manualObject.object_id),
+      );
+      setManualObjects(loadedManualObjects);
+      setManualObjectDraft(null);
+      setSelectedManualObjectId(null);
+      setEditingManualObjectId(null);
+      setSelectedTracks((current) => {
+        const previouslySelectedManualIds = new Set(
+          [...current].filter((objectId) => previousManualObjectIds.has(objectId)),
+        );
+        const next = new Set(
+          [...current].filter((objectId) => !previousManualObjectIds.has(objectId)),
+        );
+        for (const manualObject of loadedManualObjects) {
+          if (previouslySelectedManualIds.has(manualObject.object_id)
+            || interactionDraft?.object_id_list.includes(manualObject.object_id)) {
+            next.add(manualObject.object_id);
+          }
+        }
+        return next;
+      });
+      // The loaded file may contain interactions that were deliberately not
+      // imported, so this mixed session must be exported before it is treated
+      // as saved.
+      setExportedInteractionSignature("");
+      setLoadedManualObjectSignature(JSON.stringify(loadedManualObjects));
+
+      const loadedIds = new Set(
+        loadedManualObjects.map((manualObject) => manualObject.object_id),
+      );
+      const unresolvedReferences = [...new Set(
+        interactions.flatMap((interaction) => interaction.object_id_list)
+          .filter((objectId) => objectId.startsWith("m") && !loadedIds.has(objectId)),
+      )].sort(naturalCompare);
+      const warning = unresolvedReferences.length
+        ? ` Warning: existing interactions still reference missing manual objects: ${unresolvedReferences.join(", ")}.`
+        : "";
+      setMessage(`Loaded ${loadedManualObjects.length.toLocaleString()} manual objects from ${file.name}; existing interactions were preserved.${warning}`);
+    } catch (error) {
+      setMessage(`Could not read manual objects: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       event.target.value = "";
     }
@@ -1210,6 +1293,7 @@ export default function Home() {
     link.remove();
     URL.revokeObjectURL(url);
     setExportedInteractionSignature(interactionSignature);
+    setLoadedManualObjectSignature(manualObjectSignature);
     setMessage(`Exported ${sortedInteractions.length} interactions and ${sortedManualObjects.length} manual objects.`);
   }
 
@@ -1353,6 +1437,7 @@ export default function Home() {
         <input ref={videoInputRef} className="visually-hidden" type="file" accept="video/*,.mkv" onChange={loadVideo} />
         <input ref={jsonInputRef} className="visually-hidden" type="file" accept="application/json,.json" onChange={loadJson} />
         <input ref={interactionJsonInputRef} className="visually-hidden" type="file" accept="application/json,.json" onChange={loadInteractionsJson} />
+        <input ref={manualObjectJsonInputRef} className="visually-hidden" type="file" accept="application/json,.json" onChange={loadManualObjectsJson} />
         <p className="session-message">{message}</p>
       </section>
 
@@ -1508,7 +1593,7 @@ export default function Home() {
             <div className="manual-objects-title-actions">
               <span>{manualObjects.length}</span>
               <button
-                onClick={() => interactionJsonInputRef.current?.click()}
+                onClick={() => manualObjectJsonInputRef.current?.click()}
                 disabled={loadState === "reading" || !videoUrl || !data}
                 aria-label="Load manual objects JSON"
                 title={!videoUrl || !data ? "Load the matching video and control JSON first" : "Load manual objects and interactions"}

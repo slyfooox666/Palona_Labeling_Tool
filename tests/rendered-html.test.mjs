@@ -50,6 +50,7 @@ test("includes frame sync, contour hit testing, and local file support", async (
   assert.match(page, /Manual object ID \$\{objectId\} appears more than once/);
   assert.match(page, /manual_objects: manualObjects/);
   assert.match(page, /function loadInteractionsJson/);
+  assert.match(page, /function loadManualObjectsJson/);
   assert.match(page, /const interactionText = await file\.text\(\)/);
   assert.match(page, /parseInteractionFile\(JSON\.parse\(interactionText\)\)/);
   assert.match(page, /setInteractions\(loadedInteractions\)/);
@@ -96,6 +97,16 @@ test("includes frame sync, contour hit testing, and local file support", async (
   assert.match(page, /appendManualObjectPoint\(event\)/);
   assert.match(page, /manualObjectIds\.has\(objectId\)/);
   assert.match(page, /Load manual objects and interactions/);
+  assert.match(page, /Existing interactions will be preserved/);
+  assert.match(page, /existing interactions were preserved/);
+  assert.match(page, /manualObjectJsonInputRef\.current\?\.click\(\)/);
+  const manualObjectLoader = page.slice(
+    page.indexOf("async function loadManualObjectsJson"),
+    page.indexOf("function stepFrame"),
+  );
+  assert.match(manualObjectLoader, /setManualObjects\(loadedManualObjects\)/);
+  assert.doesNotMatch(manualObjectLoader, /setInteractions\(/);
+  assert.doesNotMatch(manualObjectLoader, /setInteractionDraft\(/);
   assert.match(page, /aria-label="Load manual objects JSON"/);
   assert.match(page, /aria-label="Export manual objects JSON"/);
   assert.match(page, /onClick=\{exportInteractions\}/);
