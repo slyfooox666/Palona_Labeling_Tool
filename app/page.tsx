@@ -42,9 +42,15 @@ type Interaction = {
   start_time: number;
   end_time: number | null;
 };
+type ManualObject = {
+  object_id: string;
+  name: string;
+  points: Point[];
+};
 type InteractionFile = {
   video?: string;
   contour?: string;
+  manual_objects: ManualObject[];
   interaction_list: Interaction[];
 };
 
@@ -147,6 +153,26 @@ function nextInteractionId(interactions: Interaction[]) {
   return `i${index}`;
 }
 
+function nextManualObjectId(manualObjects: ManualObject[]) {
+  const usedIds = new Set(manualObjects.map((manualObject) => manualObject.object_id));
+  let index = 0;
+  while (usedIds.has(`m${index}`)) index += 1;
+  return `m${index}`;
+}
+
+function manualObjectsEqual(left: ManualObject, right: ManualObject) {
+  return left.object_id === right.object_id
+    && left.name === right.name
+    && left.points.length === right.points.length
+    && left.points.every((point, index) => (
+      point[0] === right.points[index][0] && point[1] === right.points[index][1]
+    ));
+}
+
+function cloneManualObject(manualObject: ManualObject): ManualObject {
+  return { ...manualObject, points: manualObject.points.map(([x, y]) => [x, y]) };
+}
+
 function interactionsEqual(left: Interaction, right: Interaction) {
   return left.interaction_type === right.interaction_type
     && left.interaction_id === right.interaction_id
@@ -166,6 +192,33 @@ function parseInteractionFile(value: unknown): InteractionFile {
   if (!Array.isArray(payload.interaction_list)) {
     throw new Error("The interaction JSON must contain an interaction_list array.");
   }
+
+  const rawManualObjects = payload.manual_objects ?? [];
+  if (!Array.isArray(rawManualObjects)) {
+    throw new Error("The interaction JSON manual_objects field must be an array.");
+  }
+  const usedManualObjectIds = new Set<string>();
+  const manualObjects = rawManualObjects.map((value, index) => {
+    if (!value || typeof value !== "object") throw new Error(`Manual object ${index + 1} must be an object.`);
+    const item = value as Record<string, unknown>;
+    const objectId = typeof item.object_id === "string" ? item.object_id.trim() : "";
+    const name = typeof item.name === "string" ? item.name.trim() : "";
+    if (!objectId) throw new Error(`Manual object ${index + 1} has no object_id.`);
+    if (!name) throw new Error(`Manual object ${objectId} has no name.`);
+    if (usedManualObjectIds.has(objectId)) throw new Error(`Manual object ID ${objectId} appears more than once.`);
+    usedManualObjectIds.add(objectId);
+    if (!Array.isArray(item.points) || item.points.length < 3) {
+      throw new Error(`Manual object ${objectId} must contain at least three points.`);
+    }
+    const points = item.points.map((point, pointIndex) => {
+      if (!Array.isArray(point) || point.length !== 2
+        || point.some((coordinate) => typeof coordinate !== "number" || !Number.isFinite(coordinate))) {
+        throw new Error(`Manual object ${objectId} has an invalid point at index ${pointIndex}.`);
+      }
+      return [point[0], point[1]] as Point;
+    });
+    return { object_id: objectId, name, points };
+  }).sort((left, right) => naturalCompare(left.object_id, right.object_id));
 
   const usedIds = new Set<string>();
   const interactionList = payload.interaction_list.map((value, index) => {
@@ -204,6 +257,7 @@ function parseInteractionFile(value: unknown): InteractionFile {
   return {
     video: typeof payload.video === "string" ? payload.video : undefined,
     contour: typeof payload.contour === "string" ? payload.contour : undefined,
+    manual_objects: manualObjects,
     interaction_list: interactionList,
   };
 }
@@ -286,6 +340,10 @@ export default function Home() {
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [selectedInteractionId, setSelectedInteractionId] = useState<string | null>(null);
   const [editingInteractionId, setEditingInteractionId] = useState<string | null>(null);
+  const [manualObjects, setManualObjects] = useState<ManualObject[]>([]);
+  const [manualObjectDraft, setManualObjectDraft] = useState<ManualObject | null>(null);
+  const [selectedManualObjectId, setSelectedManualObjectId] = useState<string | null>(null);
+  const [editingManualObjectId, setEditingManualObjectId] = useState<string | null>(null);
   const [exportedInteractionSignature, setExportedInteractionSignature] = useState("");
 
   const currentFrame = useMemo(
@@ -305,11 +363,26 @@ export default function Home() {
   const hasInteractionChanges = Boolean(
     interactionDraft && (!originalInteraction || !interactionsEqual(interactionDraft, originalInteraction)),
   );
+  const displayedManualObject = manualObjectDraft;
+  const originalManualObject = useMemo(
+    () => manualObjects.find((manualObject) => manualObject.object_id === editingManualObjectId) ?? null,
+    [editingManualObjectId, manualObjects],
+  );
+  const hasManualObjectChanges = Boolean(
+    manualObjectDraft && (!originalManualObject || !manualObjectsEqual(manualObjectDraft, originalManualObject)),
+  );
   const sortedInteractions = useMemo(
     () => [...interactions].sort((left, right) => naturalCompare(left.interaction_id, right.interaction_id)),
     [interactions],
   );
-  const interactionSignature = useMemo(() => JSON.stringify(sortedInteractions), [sortedInteractions]);
+  const sortedManualObjects = useMemo(
+    () => [...manualObjects].sort((left, right) => naturalCompare(left.object_id, right.object_id)),
+    [manualObjects],
+  );
+  const interactionSignature = useMemo(() => JSON.stringify({
+    manual_objects: sortedManualObjects,
+    interaction_list: sortedInteractions,
+  }), [sortedInteractions, sortedManualObjects]);
   const interactionTypes = useMemo(
     () => [...new Set(interactions.map((interaction) => interaction.interaction_type))].sort(naturalCompare),
     [interactions],
@@ -356,6 +429,12 @@ export default function Home() {
   const renderedTracks = useMemo(() => (currentFrame?.tracks ?? []).filter(
     (track) => selectedTracks.has(track.track_id) || track.track_id === hoveredContour?.id,
   ), [currentFrame, hoveredContour?.id, selectedTracks]);
+  const renderedManualObjects = useMemo(() => {
+    const saved = manualObjects.filter(
+      (manualObject) => manualObject.object_id !== editingManualObjectId,
+    );
+    return manualObjectDraft ? [...saved, manualObjectDraft] : saved;
+  }, [editingManualObjectId, manualObjectDraft, manualObjects]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -399,6 +478,41 @@ export default function Home() {
       }
     }
 
+    for (const manualObject of renderedManualObjects) {
+      if (!manualObject.points.length) continue;
+      const isEditing = manualObjectDraft?.object_id === manualObject.object_id;
+      const color = colorFor(manualObject.object_id);
+      context.save();
+      context.beginPath();
+      context.moveTo(manualObject.points[0][0], manualObject.points[0][1]);
+      for (let index = 1; index < manualObject.points.length; index += 1) {
+        context.lineTo(manualObject.points[index][0], manualObject.points[index][1]);
+      }
+      if (manualObject.points.length >= 3) {
+        context.closePath();
+        context.fillStyle = `${color}${isEditing ? "55" : "32"}`;
+        context.fill();
+      }
+      context.strokeStyle = isEditing ? "#ffffff" : color;
+      context.lineWidth = isEditing ? Math.max(6, width / 500) : Math.max(3, width / 900);
+      context.stroke();
+      for (const [x, y] of manualObject.points) {
+        context.beginPath();
+        context.arc(x, y, Math.max(4, width / 300), 0, Math.PI * 2);
+        context.fillStyle = isEditing ? "#ffffff" : color;
+        context.fill();
+      }
+      const [labelX, labelY] = manualObject.points[0];
+      context.font = `700 ${Math.max(11, width / 65)}px Arial, sans-serif`;
+      context.fillStyle = "#05090bcc";
+      const label = `${manualObject.object_id} ${manualObject.name}`;
+      const labelWidth = context.measureText(label).width;
+      context.fillRect(labelX + 7, labelY - 18, labelWidth + 10, 20);
+      context.fillStyle = color;
+      context.fillText(label, labelX + 12, labelY - 4);
+      context.restore();
+    }
+
     if (showLineOverlay && data?.visual_aids) {
       const lineWidth = Math.max(2, width / 640);
       const colors = ["#facc15", "#f472b6", "#5ee6a8", "#59d9ff"];
@@ -406,7 +520,7 @@ export default function Home() {
         drawReferenceLine(context, line, `LINE ${index + 1}`, colors[index % colors.length], lineWidth);
       });
     }
-  }, [data?.visual_aids, hoveredContour?.id, renderedTracks, showLineOverlay, videoSize]);
+  }, [data?.visual_aids, hoveredContour?.id, manualObjectDraft?.object_id, renderedManualObjects, renderedTracks, showLineOverlay, videoSize]);
 
   useEffect(() => draw(), [draw]);
 
@@ -472,12 +586,13 @@ export default function Home() {
   function loadVideo(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
-    const hasUnexportedInteractions = interactions.length > 0
-      && interactionSignature !== exportedInteractionSignature;
-    if (hasUnexportedInteractions || hasInteractionChanges) {
+    const hasUnexportedInteractions = (
+      interactions.length > 0 || manualObjects.length > 0 || exportedInteractionSignature !== ""
+    ) && interactionSignature !== exportedInteractionSignature;
+    if (hasUnexportedInteractions || hasInteractionChanges || hasManualObjectChanges) {
       const warning = hasUnexportedInteractions
-        ? "Saved interactions have not been exported. Loading another video will remove the current control JSON and all interactions.\n\nChoose Cancel to export them first."
-        : "The interaction editor has unsaved changes. Loading another video will discard them and remove the current control JSON.\n\nChoose Cancel to return to editing.";
+        ? "Saved interactions or manual objects have not been exported. Loading another video will remove the current control JSON and annotations.\n\nChoose Cancel to export them first."
+        : "An annotation editor has unsaved changes. Loading another video will discard them and remove the current control JSON.\n\nChoose Cancel to return to editing.";
       if (!window.confirm(warning)) {
         event.target.value = "";
         setMessage("Video loading canceled. Your current labeling session is unchanged.");
@@ -498,6 +613,10 @@ export default function Home() {
     setLoadState("idle");
     setSelectedTracks(new Set());
     setInteractions([]);
+    setManualObjects([]);
+    setManualObjectDraft(null);
+    setSelectedManualObjectId(null);
+    setEditingManualObjectId(null);
     setInteractionDraft(null);
     setInteractionType("");
     setSelectedInteractionId(null);
@@ -681,10 +800,11 @@ export default function Home() {
       setMessage("Load the matching video and control JSON before loading saved interactions.");
       return;
     }
-    const hasUnexportedInteractions = interactions.length > 0
-      && interactionSignature !== exportedInteractionSignature;
-    if ((hasUnexportedInteractions || hasInteractionChanges)
-      && !window.confirm("Loading an interaction JSON will discard the current unsaved interaction changes.\n\nChoose Cancel to return to editing.")) {
+    const hasUnexportedInteractions = (
+      interactions.length > 0 || manualObjects.length > 0 || exportedInteractionSignature !== ""
+    ) && interactionSignature !== exportedInteractionSignature;
+    if ((hasUnexportedInteractions || hasInteractionChanges || hasManualObjectChanges)
+      && !window.confirm("Loading an interaction JSON will discard the current unsaved interaction or manual-object changes.\n\nChoose Cancel to return to editing.")) {
       event.target.value = "";
       setMessage("Interaction JSON loading canceled. Your current labeling session is unchanged.");
       return;
@@ -695,11 +815,20 @@ export default function Home() {
       const payload = parseInteractionFile(JSON.parse(interactionText));
       const loadedInteractions = [...payload.interaction_list]
         .sort((left, right) => naturalCompare(left.interaction_id, right.interaction_id));
-      const loadedSignature = JSON.stringify(loadedInteractions);
+      const loadedManualObjects = [...payload.manual_objects]
+        .sort((left, right) => naturalCompare(left.object_id, right.object_id));
+      const loadedSignature = JSON.stringify({
+        manual_objects: loadedManualObjects,
+        interaction_list: loadedInteractions,
+      });
       const firstInteraction = loadedInteractions[0] ?? null;
 
       setInteractionJsonName(file.name);
       setInteractions(loadedInteractions);
+      setManualObjects(loadedManualObjects);
+      setManualObjectDraft(null);
+      setSelectedManualObjectId(null);
+      setEditingManualObjectId(null);
       setExportedInteractionSignature(loadedSignature);
       setInteractionType("");
       setSelectedInteractionId(firstInteraction?.interaction_id ?? null);
@@ -714,7 +843,7 @@ export default function Home() {
         ? ` Warning: it references ${importedContourName}, but ${controlName} is loaded.`
         : "";
       const nextStep = firstInteraction ? " The first interaction is open for inspection." : "";
-      setMessage(`Loaded ${loadedInteractions.length.toLocaleString()} saved interactions from ${file.name}.${nextStep}${contourWarning}`);
+      setMessage(`Loaded ${loadedInteractions.length.toLocaleString()} saved interactions and ${loadedManualObjects.length.toLocaleString()} manual objects from ${file.name}.${nextStep}${contourWarning}`);
     } catch (error) {
       setMessage(`Could not read interaction JSON: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
@@ -773,6 +902,145 @@ export default function Home() {
     setCurrentTime(value);
     const targetFrame = frameAtOrBefore(data?.frames ?? [], value);
     setPresentedTime(targetFrame?.timestamp_seconds ?? value);
+  }
+
+  function createManualObject() {
+    const draft: ManualObject = {
+      object_id: nextManualObjectId(manualObjects),
+      name: "manual object",
+      points: [],
+    };
+    setManualObjectDraft(draft);
+    setEditingManualObjectId(null);
+    setSelectedManualObjectId(null);
+    setHoveredContour(null);
+    videoRef.current?.pause();
+    setMessage(`Created ${draft.object_id}. Click the video to append polygon points.`);
+  }
+
+  function appendManualObjectPoint(event: MouseEvent<HTMLCanvasElement>) {
+    if (!manualObjectDraft) return;
+    const point = canvasPoint(event);
+    if (!point) return;
+    setManualObjectDraft({
+      ...manualObjectDraft,
+      points: [...manualObjectDraft.points, point],
+    });
+    setMessage(`Added point ${manualObjectDraft.points.length + 1} to ${manualObjectDraft.object_id}.`);
+  }
+
+  function deleteLastManualObjectPoint() {
+    if (!manualObjectDraft?.points.length) return;
+    setManualObjectDraft({
+      ...manualObjectDraft,
+      points: manualObjectDraft.points.slice(0, -1),
+    });
+    setMessage(`Removed the last point from ${manualObjectDraft.object_id}.`);
+  }
+
+  function saveManualObject() {
+    if (!manualObjectDraft) return;
+    const savedManualObject: ManualObject = {
+      ...manualObjectDraft,
+      object_id: manualObjectDraft.object_id.trim(),
+      name: manualObjectDraft.name.trim(),
+      points: manualObjectDraft.points.map(([x, y]) => [x, y]),
+    };
+    const validationErrors: string[] = [];
+    if (!savedManualObject.object_id) validationErrors.push("Manual object ID is required.");
+    if (!savedManualObject.name) validationErrors.push("Manual object name is required.");
+    if (savedManualObject.points.length < 3) validationErrors.push("Add at least three polygon points.");
+    if (manualObjects.some((manualObject) => manualObject.object_id === savedManualObject.object_id
+      && manualObject.object_id !== editingManualObjectId)) {
+      validationErrors.push(`Manual object ID ${savedManualObject.object_id} is already in use.`);
+    }
+    if (catalog.tracks.some((track) => track.id === savedManualObject.object_id)) {
+      validationErrors.push(`Manual object ID ${savedManualObject.object_id} conflicts with a tracked object.`);
+    }
+    if (validationErrors.length) {
+      window.alert(`Cannot save this manual object:\n\n${validationErrors.join("\n")}`);
+      setMessage(validationErrors[0]);
+      return;
+    }
+
+    const oldId = editingManualObjectId;
+    setManualObjects((current) => oldId
+      ? current.map((manualObject) => manualObject.object_id === oldId ? savedManualObject : manualObject)
+      : [...current, savedManualObject]);
+    if (oldId && oldId !== savedManualObject.object_id) {
+      const replaceId = (objectIds: string[]) => objectIds
+        .map((objectId) => objectId === oldId ? savedManualObject.object_id : objectId)
+        .sort(naturalCompare);
+      setInteractions((current) => current.map((interaction) => ({
+        ...interaction,
+        object_id_list: replaceId(interaction.object_id_list),
+      })));
+      setInteractionDraft((current) => current ? {
+        ...current,
+        object_id_list: replaceId(current.object_id_list),
+      } : null);
+      setSelectedTracks((current) => {
+        if (!current.has(oldId)) return current;
+        const next = new Set(current);
+        next.delete(oldId);
+        next.add(savedManualObject.object_id);
+        return next;
+      });
+    }
+    setSelectedManualObjectId(savedManualObject.object_id);
+    setEditingManualObjectId(null);
+    setManualObjectDraft(null);
+    setMessage(`Saved manual object ${savedManualObject.object_id}.`);
+  }
+
+  function discardManualObject() {
+    if (originalManualObject) {
+      setManualObjectDraft(null);
+      setEditingManualObjectId(null);
+      setMessage("Unsaved manual-object changes discarded.");
+      return;
+    }
+    setManualObjectDraft(null);
+    setEditingManualObjectId(null);
+    setSelectedManualObjectId(null);
+    setMessage("Manual object draft discarded.");
+  }
+
+  function deleteManualObject() {
+    if (!originalManualObject) return;
+    const referencedBy = interactions.filter(
+      (interaction) => interaction.object_id_list.includes(originalManualObject.object_id),
+    );
+    if (referencedBy.length) {
+      window.alert(
+        `Cannot delete ${originalManualObject.object_id}; it is referenced by ${referencedBy.length} saved interaction${referencedBy.length === 1 ? "" : "s"}. Remove it from those interactions first.`,
+      );
+      return;
+    }
+    if (!window.confirm(
+      `Delete saved manual object ${originalManualObject.object_id} (${originalManualObject.name})?\n\nThis change is not written to disk until you export the interaction JSON again.`,
+    )) return;
+    setManualObjects((current) => current.filter(
+      (manualObject) => manualObject.object_id !== originalManualObject.object_id,
+    ));
+    setSelectedTracks((current) => {
+      const next = new Set(current);
+      next.delete(originalManualObject.object_id);
+      return next;
+    });
+    setManualObjectDraft(null);
+    setEditingManualObjectId(null);
+    setSelectedManualObjectId(null);
+    setMessage(`Deleted manual object ${originalManualObject.object_id}. Export JSON to save this change.`);
+  }
+
+  function selectManualObject(manualObject: ManualObject) {
+    setManualObjectDraft(cloneManualObject(manualObject));
+    setEditingManualObjectId(manualObject.object_id);
+    setSelectedManualObjectId(manualObject.object_id);
+    setHoveredContour(null);
+    videoRef.current?.pause();
+    setMessage(`Editing ${manualObject.object_id}. Click the video to append points.`);
   }
 
   function createInteraction() {
@@ -851,7 +1119,10 @@ export default function Home() {
     const framesInWindow = data!.frames.filter(
       (frame) => frame.frame_index >= firstFrameIndex && frame.frame_index <= lastFrameIndex,
     );
-    const missingCoverage = savedInteraction.object_id_list.map((objectId) => ({
+    const manualObjectIds = new Set(manualObjects.map((manualObject) => manualObject.object_id));
+    const missingCoverage = savedInteraction.object_id_list
+      .filter((objectId) => !manualObjectIds.has(objectId))
+      .map((objectId) => ({
       objectId,
       missingFrames: framesInWindow.filter((frame) => {
         const track = frame.tracks.find((candidate) => candidate.track_id === objectId);
@@ -924,6 +1195,7 @@ export default function Home() {
     const payload = {
       video: data?.video || videoPath,
       contour: contourPath,
+      manual_objects: sortedManualObjects,
       interaction_list: sortedInteractions,
     };
     const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], { type: "application/json" });
@@ -937,7 +1209,7 @@ export default function Home() {
     link.remove();
     URL.revokeObjectURL(url);
     setExportedInteractionSignature(interactionSignature);
-    setMessage(`Exported ${sortedInteractions.length} interactions.`);
+    setMessage(`Exported ${sortedInteractions.length} interactions and ${sortedManualObjects.length} manual objects.`);
   }
 
   function selectInteraction(interaction: Interaction) {
@@ -978,14 +1250,22 @@ export default function Home() {
     setHoveredContour(null);
   }
 
+  function canvasPoint(event: MouseEvent<HTMLCanvasElement>): Point | null {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const bounds = canvas.getBoundingClientRect();
+    return [
+      ((event.clientX - bounds.left) / bounds.width) * canvas.width,
+      ((event.clientY - bounds.top) / bounds.height) * canvas.height,
+    ];
+  }
+
   function hitTest(event: MouseEvent<HTMLCanvasElement>): HoveredContour | null {
     const canvas = canvasRef.current;
     if (!canvas) return null;
     const bounds = canvas.getBoundingClientRect();
-    const point: Point = [
-      ((event.clientX - bounds.left) / bounds.width) * canvas.width,
-      ((event.clientY - bounds.top) / bounds.height) * canvas.height,
-    ];
+    const point = canvasPoint(event);
+    if (!point) return null;
     const hits: { id: string; label: string; area: number }[] = [];
     for (const track of currentFrame?.tracks ?? []) {
       let hasPolygon = false;
@@ -1001,6 +1281,15 @@ export default function Home() {
         if (point[0] >= left && point[0] <= right && point[1] >= top && point[1] <= bottom) {
           hits.push({ id: track.track_id, label: track.label, area: (right - left) * (bottom - top) });
         }
+      }
+    }
+    for (const manualObject of manualObjects) {
+      if (manualObject.points.length >= 3 && pointInPolygon(point, manualObject.points)) {
+        hits.push({
+          id: manualObject.object_id,
+          label: manualObject.name,
+          area: polygonArea(manualObject.points),
+        });
       }
     }
     hits.sort((a, b) => a.area - b.area);
@@ -1098,10 +1387,15 @@ export default function Home() {
                 />
                 <canvas
                   ref={canvasRef}
+                  className={manualObjectDraft ? "manual-drawing" : undefined}
                   aria-label="Interactive contour overlay"
-                  onMouseMove={(event) => setHoveredContour(hitTest(event))}
+                  onMouseMove={(event) => setHoveredContour(manualObjectDraft ? null : hitTest(event))}
                   onMouseLeave={() => setHoveredContour(null)}
                   onClick={(event) => {
+                    if (manualObjectDraft) {
+                      appendManualObjectPoint(event);
+                      return;
+                    }
                     const contour = hitTest(event);
                     if (contour) toggleTrackFromCanvas(contour);
                   }}
@@ -1207,12 +1501,92 @@ export default function Home() {
           </div>
         </aside>
 
+        <section className="manual-objects-panel" aria-label="Manual objects">
+          <div className="manual-objects-title">
+            <div><span className="eyebrow">STATIC POLYGONS</span><h2>Manual objects</h2></div>
+            <div className="manual-objects-title-actions">
+              <span>{manualObjects.length}</span>
+              <button onClick={createManualObject}>Create</button>
+            </div>
+          </div>
+
+          {displayedManualObject ? (
+            <div className="manual-object-detail">
+              <div className="detail-heading">
+                <span className={originalManualObject ? "saved-badge" : "draft-badge"}>{originalManualObject ? "Editing" : "Draft"}</span>
+                <strong>{displayedManualObject.object_id} · {displayedManualObject.name}</strong>
+              </div>
+              <label className="interaction-field" htmlFor="manual-object-name">
+                <span>Name</span>
+                <input
+                  id="manual-object-name"
+                  value={manualObjectDraft?.name ?? displayedManualObject.name}
+                  onChange={(event) => {
+                    if (manualObjectDraft) setManualObjectDraft({ ...manualObjectDraft, name: event.target.value });
+                  }}
+                />
+              </label>
+              <label className="interaction-field" htmlFor="manual-object-id">
+                <span>Object ID</span>
+                <input
+                  id="manual-object-id"
+                  value={manualObjectDraft?.object_id ?? displayedManualObject.object_id}
+                  onChange={(event) => {
+                    if (manualObjectDraft) setManualObjectDraft({ ...manualObjectDraft, object_id: event.target.value });
+                  }}
+                />
+              </label>
+              <p className="manual-object-help">
+                Click the video to append points. The polygon closes automatically after three points.
+              </p>
+              <div className="manual-object-point-count">
+                <strong>{displayedManualObject.points.length}</strong>
+                <span>polygon points</span>
+              </div>
+              <div className="interaction-actions">
+                <button onClick={deleteLastManualObjectPoint} disabled={!manualObjectDraft?.points.length}>Delete last point</button>
+                <button className="save-action" onClick={saveManualObject} disabled={!hasManualObjectChanges}>Save</button>
+                <button onClick={discardManualObject}>{originalManualObject ? "Discard changes" : "Discard"}</button>
+                {originalManualObject ? <button className="delete-action" onClick={deleteManualObject}>Delete object</button> : null}
+              </div>
+            </div>
+          ) : (
+            <div className="interaction-empty">Create a manual object, then click the video to draw its polygon.</div>
+          )}
+
+          <div className="defined-manual-objects">
+            <div className="section-heading"><h3>Saved manual objects</h3></div>
+            <div className="manual-object-list">
+              {sortedManualObjects.length ? sortedManualObjects.map((manualObject) => (
+                <div
+                  key={manualObject.object_id}
+                  className={selectedManualObjectId === manualObject.object_id ? "selected" : ""}
+                >
+                  <label className={selectedTracks.has(manualObject.object_id) ? "checked" : ""}>
+                    <input
+                      type="checkbox"
+                      checked={selectedTracks.has(manualObject.object_id)}
+                      onChange={() => toggleTrack(manualObject.object_id)}
+                    />
+                    <span className="color-dot" style={{ background: colorFor(manualObject.object_id) }} />
+                    <span><strong>{manualObject.name}</strong><small>{manualObject.object_id}</small></span>
+                    <em>{manualObject.points.length}pt</em>
+                    <span className="checkmark">✓</span>
+                  </label>
+                  <button onClick={() => selectManualObject(manualObject)}>Edit</button>
+                </div>
+              )) : <p>No saved manual objects yet.</p>}
+            </div>
+            <p className="manual-object-selection-hint">Checked manual objects are included when creating or editing an interaction.</p>
+          </div>
+        </section>
+
         <section className="interactions-panel" aria-label="Interactions">
           <div className="interactions-title">
             <div><span className="eyebrow">ANNOTATION EVENTS</span><h2>Interactions</h2></div>
             <div className="interactions-title-actions">
               <span>{interactions.length}</span>
-              <button onClick={exportInteractions} disabled={!interactions.length}>Export JSON</button>
+              <button onClick={exportInteractions} disabled={!interactions.length && !manualObjects.length}>Export JSON</button>
             </div>
           </div>
 

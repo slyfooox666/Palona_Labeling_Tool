@@ -44,7 +44,7 @@ button { color: inherit; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
 .workspace { max-width: 1700px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; align-items: start; }
-.viewer-panel, .inspector, .interactions-panel { border: 1px solid var(--line); background: var(--panel); border-radius: 12px; overflow: hidden; box-shadow: 0 18px 60px #0008; }
+.viewer-panel, .inspector, .manual-objects-panel, .interactions-panel { border: 1px solid var(--line); background: var(--panel); border-radius: 12px; overflow: hidden; box-shadow: 0 18px 60px #0008; }
 .side-column { min-width: 0; display: grid; gap: 14px; }
 .viewer-head { height: 54px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; border-bottom: 1px solid var(--line); }
 .viewer-head > div:first-child { min-width: 0; }
@@ -56,6 +56,7 @@ button { color: inherit; }
 .stage-wrap { position: relative; width: 100%; min-height: 300px; background: #030709; overflow: hidden; }
 .stage-wrap video, .stage-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 .stage-wrap canvas { z-index: 2; cursor: crosshair; }
+.stage-wrap canvas.manual-drawing { cursor: cell; }
 .empty-stage { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; color: #61727a; }
 .empty-stage > span { display: grid; place-items: center; width: 55px; height: 55px; border: 1px solid #314048; border-radius: 50%; color: #9bb0b9; padding-left: 4px; margin-bottom: 14px; }
 .empty-stage strong { color: #aab7bc; font-size: 13px; }
@@ -92,7 +93,7 @@ kbd { display: inline-block; min-width: 18px; margin-left: 6px; padding: 2px 4px
 .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .type-grid label { min-width: 0; display: flex; align-items: center; gap: 7px; padding: 8px; border: 1px solid #2c393f; border-radius: 6px; color: #76888f; font-size: 10px; cursor: pointer; }
 .type-grid label.checked { background: #1a2b32; border-color: #395967; color: #d1dce0; }
-.type-grid input, .track-list input { display: none; }
+.type-grid input, .track-list input, .manual-object-list input { display: none; }
 .checkmark { display: grid; place-items: center; width: 14px; height: 14px; border: 1px solid #405158; border-radius: 4px; color: transparent; font-size: 9px; }
 .checked > .checkmark, .checked > span > .checkmark { background: #285866; border-color: #438399; color: var(--cyan); }
 .empty-list { grid-column: 1 / -1; margin: 4px 0; color: #65767d; font-size: 10px; line-height: 1.5; }
@@ -110,6 +111,33 @@ kbd { display: inline-block; min-width: 18px; margin-left: 6px; padding: 2px 4px
 .current-summary strong, .current-summary small { display: block; }
 .current-summary strong { font-size: 10px; }
 .current-summary small { margin-top: 4px; color: #6b7e86; font-size: 9px; }
+
+.manual-objects-panel { min-width: 0; }
+.manual-objects-title { min-height: 63px; display: flex; align-items: center; justify-content: space-between; padding: 13px 14px; border-bottom: 1px solid var(--line); }
+.manual-objects-title h2 { margin: 3px 0 0; font-size: 17px; }
+.manual-objects-title-actions { display: flex; align-items: center; gap: 6px; }
+.manual-objects-title-actions > span { min-width: 25px; padding: 5px 7px; border-radius: 5px; background: #1e2b31; color: #86979e; font: 9px var(--font-geist-mono), monospace; text-align: center; }
+.manual-objects-title-actions button { height: 27px; padding: 0 8px; border: 1px solid #365563; border-radius: 5px; background: #17323b; color: var(--cyan); font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; }
+.manual-objects-title-actions button:hover { border-color: var(--cyan); }
+.manual-object-detail { padding: 12px 14px 14px; border-bottom: 1px solid var(--line); }
+.manual-object-help { margin: 2px 0 9px; color: #6d8189; font-size: 9px; line-height: 1.5; }
+.manual-object-point-count { display: flex; align-items: baseline; gap: 6px; padding: 8px 10px; border: 1px solid #293a42; border-radius: 6px; background: #0b1418; }
+.manual-object-point-count strong { color: var(--cyan); font: 13px var(--font-geist-mono), monospace; }
+.manual-object-point-count span { color: #72858d; font-size: 9px; }
+.defined-manual-objects { padding: 12px 14px 14px; }
+.manual-object-list { display: grid; gap: 5px; max-height: 205px; overflow-y: auto; scrollbar-color: #33464e transparent; }
+.manual-object-list > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; border: 1px solid #28363c; border-radius: 7px; overflow: hidden; background: #0e171b; }
+.manual-object-list > div.selected { border-color: #406675; background: #15242a; }
+.manual-object-list label { min-width: 0; display: grid; grid-template-columns: 8px minmax(0, 1fr) auto 16px; align-items: center; gap: 9px; padding: 8px 9px; cursor: pointer; opacity: .55; }
+.manual-object-list label.checked { opacity: 1; }
+.manual-object-list label strong, .manual-object-list label small { display: block; }
+.manual-object-list label strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.manual-object-list label small { margin-top: 3px; color: #60747c; font: 8px var(--font-geist-mono), monospace; }
+.manual-object-list label em { color: #78909a; font: normal 8px var(--font-geist-mono), monospace; }
+.manual-object-list > div > button { padding: 0 10px; border: 0; border-left: 1px solid #28363c; background: #17262d; color: #86a5b0; font-size: 8px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+.manual-object-list > div > button:hover { color: var(--cyan); }
+.manual-object-list > p { margin: 2px 0; color: #60737b; font-size: 9px; }
+.manual-object-selection-hint { margin: 9px 0 0; color: #60737b; font-size: 8px; line-height: 1.45; }
 
 .interactions-panel { min-width: 0; }
 .interactions-title { min-height: 63px; display: flex; align-items: center; justify-content: space-between; padding: 13px 14px; border-bottom: 1px solid var(--line); }
