@@ -1,0 +1,185 @@
+{
+  "video": "/home/haih/git/pal-research/agent/vision/chica/bar/train/C12_2026-08-29_02-10-53.mp4",
+  "contour": "C12_2026-08-29_02-10-53.json",
+  "manual_objects": [],
+  "interaction_list": [
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i0",
+      "object_id_list": [
+        "p0:16",
+        "p0:92"
+      ],
+      "start_time": 0,
+      "end_time": 59.823
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i1",
+      "object_id_list": [
+        "p0:27"
+      ],
+      "start_time": 0,
+      "end_time": 59.823
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i2",
+      "object_id_list": [
+        "p0:36"
+      ],
+      "start_time": 9.815,
+      "end_time": 59.823
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i3",
+      "object_id_list": [
+        "p0:3"
+      ],
+      "start_time": 27.107,
+      "end_time": 59.823
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i4",
+      "object_id_list": [
+        "p0:30"
+      ],
+      "start_time": 0,
+      "end_time": 59.923
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i5",
+      "object_id_list": [
+        "p0:15"
+      ],
+      "start_time": 0,
+      "end_time": 59.823
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i6",
+      "object_id_list": [
+        "p0:54"
+      ],
+      "start_time": 0,
+      "end_time": 59.823
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i7",
+      "object_id_list": [
+        "p0:33",
+        "p0:102"
+      ],
+      "start_time": 0,
+      "end_time": 59.823
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i8",
+      "object_id_list": [
+        "p0:18",
+        "p0:42",
+        "p0:44",
+        "p0:112",
+        "p0:134"
+      ],
+      "start_time": 0,
+      "end_time": 59.923
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i9",
+      "object_id_list": [
+        "p0:34",
+        "p0:73"
+      ],
+      "start_time": 0,
+      "end_time": 59.823
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i10",
+      "object_id_list": [
+        "p0:35"
+      ],
+      "start_time": 0,
+      "end_time": 59.823
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i11",
+      "object_id_list": [
+        "p0:2"
+      ],
+      "start_time": 0,
+      "end_time": 59.823
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i12",
+      "object_id_list": [
+        "p0:29",
+        "p0:36"
+      ],
+      "start_time": 17.827,
+      "end_time": 23.201
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i13",
+      "object_id_list": [
+        "p0:3",
+        "p0:23",
+        "p0:29",
+        "p0:36"
+      ],
+      "start_time": 29.811,
+      "end_time": 31.681
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i14",
+      "object_id_list": [
+        "p0:29",
+        "p0:36"
+      ],
+      "start_time": 35.921,
+      "end_time": 37.723
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i15",
+      "object_id_list": [
+        "p0:3",
+        "p0:29"
+      ],
+      "start_time": 38.925,
+      "end_time": 39.927
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i16",
+      "object_id_list": [
+        "p0:23",
+        "p0:29",
+        "p0:36"
+      ],
+      "start_time": 42.697,
+      "end_time": 43.799
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i17",
+      "object_id_list": [
+        "p0:29",
+        "p0:36"
+      ],
+      "start_time": 50.409,
+      "end_time": 52.712
+    }
+  ]
+}

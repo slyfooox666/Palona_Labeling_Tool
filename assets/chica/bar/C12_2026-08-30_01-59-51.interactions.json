@@ -1,0 +1,207 @@
+{
+  "video": "/home/haih/git/pal-research/agent/vision/chica/bar/train/C12_2026-08-30_01-59-51.mp4",
+  "contour": "C12_2026-08-30_01-59-51.json",
+  "manual_objects": [],
+  "interaction_list": [
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i0",
+      "object_id_list": [
+        "p0:15"
+      ],
+      "start_time": 0,
+      "end_time": 35.119
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i1",
+      "object_id_list": [
+        "p0:14"
+      ],
+      "start_time": 0,
+      "end_time": 37.823
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i2",
+      "object_id_list": [
+        "p0:4"
+      ],
+      "start_time": 0,
+      "end_time": 59.922
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i3",
+      "object_id_list": [
+        "p0:21"
+      ],
+      "start_time": 0,
+      "end_time": 59.922
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i4",
+      "object_id_list": [
+        "p0:3"
+      ],
+      "start_time": 0,
+      "end_time": 59.922
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i5",
+      "object_id_list": [
+        "p0:30",
+        "p0:86"
+      ],
+      "start_time": 0,
+      "end_time": 59.922
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i6",
+      "object_id_list": [
+        "p0:23"
+      ],
+      "start_time": 0,
+      "end_time": 59.922
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i7",
+      "object_id_list": [
+        "p0:41"
+      ],
+      "start_time": 18.828,
+      "end_time": 59.922
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i8",
+      "object_id_list": [
+        "p0:24"
+      ],
+      "start_time": 0,
+      "end_time": 59.922
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i9",
+      "object_id_list": [
+        "p0:26"
+      ],
+      "start_time": 0,
+      "end_time": 59.922
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i10",
+      "object_id_list": [
+        "p0:0"
+      ],
+      "start_time": 0,
+      "end_time": 36.821
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i11",
+      "object_id_list": [
+        "p0:18"
+      ],
+      "start_time": 36.921,
+      "end_time": 59.922
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i12",
+      "object_id_list": [
+        "p0:14",
+        "p0:16"
+      ],
+      "start_time": 11.016,
+      "end_time": 13.119
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i13",
+      "object_id_list": [
+        "p0:14",
+        "p0:16"
+      ],
+      "start_time": 14.221,
+      "end_time": 15.423
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i14",
+      "object_id_list": [
+        "p0:14",
+        "p0:16"
+      ],
+      "start_time": 15.423,
+      "end_time": 19.228
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i15",
+      "object_id_list": [
+        "p0:14",
+        "p0:16"
+      ],
+      "start_time": 19.929,
+      "end_time": 20.731
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i16",
+      "object_id_list": [
+        "p0:15",
+        "p0:16"
+      ],
+      "start_time": 23.301,
+      "end_time": 27.207
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i17",
+      "object_id_list": [
+        "p0:14",
+        "p0:15",
+        "p0:16"
+      ],
+      "start_time": 32.815,
+      "end_time": 34.418
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i18",
+      "object_id_list": [
+        "p0:15",
+        "p0:16"
+      ],
+      "start_time": 37.422,
+      "end_time": 46.602
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i19",
+      "object_id_list": [
+        "p0:3",
+        "p0:62"
+      ],
+      "start_time": 29.51,
+      "end_time": 33.316
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i20",
+      "object_id_list": [
+        "p0:23",
+        "p0:62"
+      ],
+      "start_time": 35.219,
+      "end_time": 37.722
+    }
+  ]
+}

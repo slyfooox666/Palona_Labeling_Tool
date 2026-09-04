@@ -1,0 +1,96 @@
+{
+  "video": "/home/haih/git/pal-research/agent/vision/chica/bar/train/C12_2026-08-29_01-51-53.mp4",
+  "contour": "C12_2026-08-29_01-51-53.json",
+  "manual_objects": [],
+  "interaction_list": [
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i0",
+      "object_id_list": [
+        "p0:31"
+      ],
+      "start_time": 0,
+      "end_time": 59.806
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i1",
+      "object_id_list": [
+        "p0:30",
+        "p0:79",
+        "p0:91",
+        "p0:102"
+      ],
+      "start_time": 0,
+      "end_time": 59.806
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i2",
+      "object_id_list": [
+        "p0:2",
+        "p0:87",
+        "p0:94",
+        "p0:112"
+      ],
+      "start_time": 0,
+      "end_time": 59.893
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i3",
+      "object_id_list": [
+        "p0:35"
+      ],
+      "start_time": 0,
+      "end_time": 59.893
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i4",
+      "object_id_list": [
+        "p0:38"
+      ],
+      "start_time": 0,
+      "end_time": 59.893
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i5",
+      "object_id_list": [
+        "p0:1"
+      ],
+      "start_time": 0,
+      "end_time": 59.893
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i6",
+      "object_id_list": [
+        "p0:22",
+        "p0:31"
+      ],
+      "start_time": 18.662,
+      "end_time": 22.004
+    },
+    {
+      "interaction_type": "bartender_greeting",
+      "interaction_id": "i7",
+      "object_id_list": [
+        "p0:2",
+        "p0:22"
+      ],
+      "start_time": 24.825,
+      "end_time": 31.726
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i8",
+      "object_id_list": [
+        "p0:25"
+      ],
+      "start_time": 24.391,
+      "end_time": 30.12
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "video": "/home/haih/git/pal-research/agent/vision/chica/bar/train/C12_2026-08-30_01-25-52.mp4",
+  "contour": "C12_2026-08-30_01-25-52.json",
+  "manual_objects": [],
+  "interaction_list": [
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i0",
+      "object_id_list": [
+        "p0:0",
+        "p0:64",
+        "p0:127"
+      ],
+      "start_time": 0,
+      "end_time": 59.891
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i1",
+      "object_id_list": [
+        "p0:20",
+        "p0:87",
+        "p0:153"
+      ],
+      "start_time": 0,
+      "end_time": 59.891
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i2",
+      "object_id_list": [
+        "p0:32",
+        "p0:88",
+        "p0:155"
+      ],
+      "start_time": 0,
+      "end_time": 59.891
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i3",
+      "object_id_list": [
+        "p0:5",
+        "p0:97",
+        "p0:134"
+      ],
+      "start_time": 0,
+      "end_time": 59.891
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i4",
+      "object_id_list": [
+        "p0:10",
+        "p0:107",
+        "p0:151"
+      ],
+      "start_time": 0,
+      "end_time": 59.891
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i5",
+      "object_id_list": [
+        "p0:33",
+        "p0:89",
+        "p0:157"
+      ],
+      "start_time": 0,
+      "end_time": 59.891
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i6",
+      "object_id_list": [
+        "p0:1",
+        "p0:91",
+        "p0:138"
+      ],
+      "start_time": 0,
+      "end_time": 59.891
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i7",
+      "object_id_list": [
+        "p0:6",
+        "p0:103",
+        "p0:179"
+      ],
+      "start_time": 0,
+      "end_time": 59.891
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i8",
+      "object_id_list": [
+        "p0:35",
+        "p0:90",
+        "p0:159"
+      ],
+      "start_time": 0,
+      "end_time": 59.891
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i9",
+      "object_id_list": [
+        "p0:160"
+      ],
+      "start_time": 46.329,
+      "end_time": 59.891
+    },
+    {
+      "interaction_type": "sit_at_bar",
+      "interaction_id": "i10",
+      "object_id_list": [
+        "p0:168"
+      ],
+      "start_time": 49.703,
+      "end_time": 59.891
+    }
+  ]
+}

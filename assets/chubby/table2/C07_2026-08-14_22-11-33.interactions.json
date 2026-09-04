@@ -1,5 +1,5 @@
 {
-  "video": "/home/zachhuang/git/pal-research/agent/vision/chubby/table2/train/C07_2026-08-14_22-11-33.mkv",
+  "video": "agent/vision/chubby/table2/train/C07_2026-08-14_22-11-33.mkv",
   "contour": "C07_2026-08-14_22-11-33.json",
   "interaction_list": [
     {
