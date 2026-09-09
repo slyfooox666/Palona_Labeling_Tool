@@ -142,7 +142,7 @@ assets/chica/bar/C12_2026-08-30_01-26-52.mp4 filter=lfs diff=lfs merge=lfs -text
 assets/chica/bar/C12_2026-08-29_02-08-52.json filter=lfs diff=lfs merge=lfs -text
 assets/chubby/*.json filter=lfs diff=lfs merge=lfs -text
 assets/chubby/*.mp4 filter=lfs diff=lfs merge=lfs -text
-agent/vision/chubby/table/**/*.mp4 filter=lfs diff=lfs merge=lfs -text
-agent/vision/chubby/table/train/contour/*.json filter=lfs diff=lfs merge=lfs -text
 assets/chubby/table/*.mp4 filter=lfs diff=lfs merge=lfs -text
 assets/chubby/table/*.json filter=lfs diff=lfs merge=lfs -text
+agent/vision/chubby/table/**/*.mp4 filter=lfs diff=lfs merge=lfs -text
+agent/vision/chubby/table/train/contour/*.json filter=lfs diff=lfs merge=lfs -text
